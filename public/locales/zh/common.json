@@ -1,0 +1,111 @@
+{
+  "login": "登录",
+  "username": "用户名",
+  "password": "密码",
+  "something_wrong": "出了点问题！",
+
+  "login.enter_username": "请输入用户名",
+  "login.enter_password": "请输入密码",
+  "login.credential_not_match": "凭证不匹配。",
+
+  "name": "名称",
+  "name_en": "名称（英文）",
+  "name_zh": "名称（中文）",
+
+  "role": "角色",
+  "created_at": "创建时间",
+  "action": "操作",
+  "rows_per_page": "每页行数",
+  "dashboard": "仪表盘",
+  "users": "用户",
+
+  "user.add": "添加",
+
+  "category": "类别",
+  "subcategory": "子类别",
+  "image": "图片",
+
+  "price": "价格",
+  "description": "描述",
+  "unit": "单位",
+  "available": "可用",
+
+  "dish": "菜品",
+  "order": "订单",
+  "employee": "员工",
+  "quantity": "数量",
+  "order_quantity": "订购数量",
+  "table_number": "桌号",
+  "order_status": "订单状态",
+  "select": "选择",
+  "loading": "加载中",
+  "unexpected_error": "意外错误：",
+  "something_went_wrong": "出了点问题",
+  "name_field_required": "名称字段是必填的。",
+
+  "status": "状态",
+
+  "dish_availability": "菜品可用性",
+  "description_en": "描述（英文）",
+  "description_zh": "描述（中文）",
+
+  "restaurant_name": "餐厅名称",
+  "restaurant_logo": "餐厅标志",
+  "restaurant_background": "餐厅背景",
+
+  "brand_configuration": "品牌配置",
+  "upload_logo_file": "上传标志文件",
+  "upload_images": "上传图片",
+
+  "duration": "持续时间",
+  "duration_required": "持续时间必须大于零",
+
+  "brand": "品牌",
+  "categories": "类别",
+  "employees": "员工",
+  "dishes": "菜品",
+  "orders": "订单",
+  "services": "服务",
+
+  "image_field_required": "图片字段是必填的。",
+  "ip_address": "IP地址",
+  "port": "端口",
+  "position": "位置",
+  "ipaddress_field_required": "IP地址字段是必填的。",
+  "port_field_required": "端口字段是必填的。",
+  "position_field_required": "位置字段是必填的。",
+
+  "save": "保存",
+  "service_history": "服务历史",
+  "tables": "桌子",
+  "printers": "打印机",
+  "payment_methods": "支付方式",
+
+  "service": "服务",
+  "amount": "金额",
+  "table": "桌子",
+  "manager": "经理",
+  "congratulation": "恭喜！",
+
+  "brand_logo_required": "需要品牌标志文件",
+  "screen_saver_after": "屏幕保护程序间隔",
+  "screen_saver_required": "需要屏幕保护程序间隔",
+  "backgroud_images_required": "需要背景图片",
+
+  "from_date_field_required": "需要填写开始日期字段",
+  "to_date_field_required": "需要填写结束日期字段",
+  "order_search": "订单搜索",
+
+  "statistics": "统计",
+  "total_paid": "已支付总额",
+  "total_unpaid": "未支付总额",
+  "group_orders_summary": "团体订单汇总",
+  "dish_name": "菜品名称",
+  "total_qty": "总数量",
+  "total_value": "总金额",
+  "group_orders_bar_chart": "团体订单柱状图",
+  "payment_orders_summary": "支付订单汇总",
+  "payment_method": "支付方式",
+  "payment_methods_pie_chart": "支付方式饼图",
+  "currency_unit": "元"
+}

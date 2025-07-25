@@ -1,0 +1,111 @@
+{
+  "login": "Login",
+  "username": "Username",
+  "password": "Password",
+  "something_wrong": "Something went wrong!",
+
+  "login.enter_username": "Enter username",
+  "login.enter_password": "Enter password",
+  "login.invalid_credentials": "Credential does not match.",
+
+  "name": "Name",
+  "name_en": "Name (EN)",
+  "name_zh": "Name (ZH)",
+
+  "role": "Role",
+  "created_at": "Created At",
+  "action": "Action",
+  "rows_per_page": "Rows per page",
+  "dashboard": "Dashboard",
+  "users": "Users",
+
+  "user.add": "Add User",
+
+  "category": "Category",
+  "subcategory": "subcategory",
+  "image": "Image",
+
+  "price": "price",
+  "description": "description",
+  "unit": "unit",
+  "available": "available",
+
+  "dish": "Dish",
+  "order": "Order",
+  "employee": "Employee",
+  "quantity": "Quantity",
+  "order_quantity": "Order Quantity",
+  "table_number": "Table Number",
+  "order_status": "Order Status",
+  "select": "Select",
+  "loading": "Loading",
+  "unexpected_error": "Unexpected error:",
+  "something_went_wrong": "Something went wrong",
+  "name_field_required": "The name field is required.",
+
+  "status": "Status",
+
+  "dish_availability": "Dish Availability",
+  "description_en": "Description (EN)",
+  "description_zh": "Description (ZH)",
+
+  "restaurant_name": "Restaurant Name",
+  "restaurant_logo": "Restaurant Logo",
+  "restaurant_background": "Restaurant Background",
+
+  "brand_configuration": "Brand Configuration",
+  "upload_logo_file": "Upload Logo File",
+  "upload_images": "Upload Images",
+
+  "duration": "Duration",
+  "duration_required": "Duration must be bigger than zero",
+
+  "brand": "Brand",
+  "categories": "Categories",
+  "employees": "Employees",
+  "dishes": "Dishes",
+  "orders": "Orders",
+  "services": "Services",
+
+  "image_field_required": "The image field is required.",
+  "ip_address": "IP Address",
+  "port": "Port",
+  "position": "Position",
+  "ipaddress_field_required": "The IP Address field is required.",
+  "port_field_required": "The Port field is required.",
+  "position_field_required": "The Position field is required.",
+
+  "save": "Save",
+  "service_history": "Service History",
+  "tables": "Tables",
+  "printers": "Printers",
+  "payment_methods": "Payment Methods",
+
+  "service": "Service",
+  "amount": "Amount",
+  "table": "Table",
+  "manager": "Manager",
+  "congratulation": "Congratulation!",
+  
+  "brand_logo_required": "Brand Logo file required",
+  "screen_saver_after": "Screen Saver Interval",
+  "screen_saver_required": "Screen Saver Interval required",
+  "backgroud_images_required": "Background images required",
+
+  "from_date_field_required": "From date field is required",
+  "to_date_field_required": "To date field is required",
+  "order_search": "Order Search",
+
+  "statistics": "Statistics",
+  "total_paid": "Total Paid",
+  "total_unpaid": "Total Unpaid",
+  "group_orders_summary": "Group Orders Summary",
+  "dish_name": "Dish Name",
+  "total_qty": "Total Quantity",
+  "total_value": "Total Value",
+  "group_orders_bar_chart": "Group Orders Bar Chart",
+  "payment_orders_summary": "Payment Orders Summary",
+  "payment_method": "Payment Method",
+  "payment_methods_pie_chart": "Payment Methods Pie Chart",
+  "currency_unit": "$"
+}

@@ -1,0 +1,135 @@
+import React, { useState } from 'react';
+import {
+    TableRow,
+    TableCell,
+    TextField,
+    Select,
+    MenuItem,
+    Alert,
+    FormControl,
+    InputLabel,
+} from '@mui/material';
+import SaveIcon from '@mui/icons-material/Save';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import IconButton from '@mui/material/IconButton';
+import { User, USER_ROLE } from '@/utils/info';
+import api from '@/utils/http_helper';
+import Box from '@mui/material/Box';
+
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+
+export async function getStaticProps({ locale }: { locale: string }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale, ['common'])),
+        },
+    };
+}
+
+type AddPanelProps = {
+    onBack: () => void;
+    onSave: (data: User) => void;
+};
+
+const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
+
+    const { t } = useTranslation('common')
+
+    const [name, setName] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [role, setRole] = useState<string>('');
+
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const handleSave = () => {
+        if (name && role && password) {
+            const formData = new FormData();
+
+            formData.append('username', name);
+            formData.append('password', password);
+            formData.append('user_role', role);
+
+            api.post('/users', formData)
+                .then(res => onSave(res.data.user))
+                .catch(error => {
+                    if (error.response && error.response.status === 422) {
+                        // Validation error from server
+                        console.log(error.response.data);
+                        setErrorMessage(error.response.data.message);
+                    } else {
+                        // Other errors
+                        console.error(t('unexpected_error'), error);
+                        setErrorMessage(t('something_went_wrong'));
+                    }
+                })
+        }
+    };
+
+    return (
+        <>
+            {errorMessage && (
+                <TableRow>
+                    <TableCell colSpan={4} sx={{ border: 0 }}>
+                        <Alert severity="error">{errorMessage}</Alert>
+                    </TableCell>
+                </TableRow>)}
+            <TableRow>
+                <TableCell>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder={t('name')}
+                            fullWidth
+                            label={t('name')}
+                        />
+                        <TextField
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder={t('password')}
+                            fullWidth
+                            label={t('password')}
+                        />
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel>{t('role')}</InputLabel>
+                        <Select
+                            value={role}
+                            onChange={(e) => setRole(e.target.value as string)}
+                            displayEmpty
+                            label={t('role')}
+                        >
+                            <MenuItem value={0} disabled>{t('select')}</MenuItem>
+                            {Object.entries(USER_ROLE)?.map(([key, value]) => (
+                                <MenuItem value={key}>{value}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </TableCell>
+                <TableCell align="right"></TableCell>
+                <TableCell>
+                    <IconButton
+                        aria-label="save"
+                        color="primary"
+                        onClick={handleSave}
+                        sx={{ mr: 1 }}
+                    >
+                        <SaveIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label="save"
+                        color="secondary"
+                        onClick={onBack}
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
+                </TableCell>
+            </TableRow>
+        </>
+    );
+};
+
+export default AddPanel;

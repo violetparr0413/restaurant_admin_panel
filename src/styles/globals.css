@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --dark-orange: #EF6C00;
+  --nav-color: #253034;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@font-face {
+  font-family: 'English';
+  src: url('/fonts/English.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'English';
+  src: url('/fonts/English_Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Japanese';
+  src: url('/fonts/Japanese.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ArabicFont';
+  src: url('/fonts/Japanese_Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+.bg-dark-orange {
+  background-color: var(--dark-orange) !important;
+}
+
+.bg-dark-nav {
+  background-color: var(--nav-color) !important;
+}
+
+.MuiDataGrid-main > div:last-child {
+  display: none !important;
+}
