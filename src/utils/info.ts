@@ -38,6 +38,7 @@ export interface Category {
     category_name: string;
     category_en_name: string;
     category_zh_name: string;
+    category_ko_name: string;
     parent_id: number;
     category_image: string;
     category_order: number;
@@ -52,10 +53,12 @@ export interface Dish {
     dish_name: string;
     dish_en_name: string;
     dish_zh_name: string;
+    dish_ko_name: string;
     dish_image: string;
     dish_description: string;
     dish_en_description: string;
     dish_zh_description: string;
+    dish_ko_description: string;
     dish_unit: string;
     dish_price: number;
     dish_available: number;
@@ -67,6 +70,7 @@ export interface Service {
     service_name: string;
     service_en_name: string;
     service_zh_name: string;
+    service_ko_name: string;
     created_at: string;
 }
 

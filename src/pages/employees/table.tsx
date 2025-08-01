@@ -17,6 +17,7 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import LockResetIcon from '@mui/icons-material/LockReset';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 
 import { Employee } from '../../utils/info';
@@ -26,7 +27,7 @@ import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { convertDateTime } from '@/utils/http_helper';
+import api, { convertDateTime } from '@/utils/http_helper';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -114,13 +115,15 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
 interface TableProps {
     rows: Employee[];
+    info: (value: string) => void;
+    error: (value: string) => void;
 }
 
-export default function Page({ rows }: TableProps) {
+export default function Page({ rows, info, error }: TableProps) {
     const { t } = useTranslation('common')
 
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
@@ -180,6 +183,25 @@ export default function Page({ rows }: TableProps) {
         setRows(rowsData?.filter(row => row !== data))
     }
 
+    const handleResetClick = (row: Employee) => {
+        api.get(`/remove-password/${row?.employee_id}`)
+            .then(res => {
+                info(t('password_reset_success'))
+            })
+            .catch(error => {
+                if (error.response && error.response.status === 422) {
+                    // Validation error from server
+                    console.log(error.response.data);
+                    // setErrorMessage(error.response.data.message);
+                    error(t('something_went_wrong'));
+                } else {
+                    // Other errors
+                    console.error(t('unexpected_error'), error);
+                    error(t('something_went_wrong'));
+                }
+            })
+    }
+
     return (
         <TableContainer component={Paper}>
             <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
@@ -188,7 +210,7 @@ export default function Page({ rows }: TableProps) {
                         <StyledTableCell>{t('name')}</StyledTableCell>
                         <StyledTableCell>{t('role')}</StyledTableCell>
                         <StyledTableCell align="right">{t('created_at')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 160 }}>
+                        <StyledTableCell sx={{ width: 200 }}>
                             <IconButton aria-label="add"
                                 color="info"
                                 onClick={handleAddClick}
@@ -238,6 +260,15 @@ export default function Page({ rows }: TableProps) {
                                         sx={{ mr: 1 }}
                                     >
                                         <EditIcon />
+                                    </IconButton>
+                                    <IconButton
+                                        aria-label="reset"
+                                        color="warning"
+                                        onClick={() => handleResetClick(row)}
+                                        disabled={!row?.employee_id}
+                                        sx={{ mr: 1 }}
+                                    >
+                                        <LockResetIcon />
                                     </IconButton>
                                     <IconButton
                                         aria-label="delete"

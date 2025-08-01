@@ -12,15 +12,7 @@ import { Service } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-    },
-  };
-}
+import { useRouter } from 'next/router';
 
 type AddPanelProps = {
     onBack: () => void;
@@ -32,18 +24,25 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     const { t } = useTranslation('common')
 
     const [name, setName] = useState<string>('');
-    const [nameEN, setNameEN] = useState<string>('');
-    const [nameZH, setNameZH] = useState<string>('');
 
     const [errorMessage, setErrorMessage] = useState('');
+
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+    }, [locale]);
 
     const handleSave = () => {
         if (name) {
             const formData = new FormData();
 
-            formData.append('service_name', name);
-            formData.append('service_en_name', nameEN);
-            formData.append('service_zh_name', nameZH);
+            locale === 'en' ? formData.append('service_en_name', name) :
+                locale === 'zh' ? formData.append('service_zh_name', name) :
+                    locale === 'ko' ? formData.append('service_ko_name', name) :
+                        formData.append('service_name', name);
+
+            (locale !== 'ja') && formData.append('service_name', name);
 
             api.post('/service', formData)
                 .then(res => onSave(res.data))
@@ -51,7 +50,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
@@ -67,7 +67,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={4} sx={{ border: 0 }}>
+                    <TableCell colSpan={2} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
@@ -79,24 +79,6 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
                         label={t('name')}
-                    />
-                </TableCell>
-                <TableCell>
-                    <TextField
-                        fullWidth
-                        value={nameEN}
-                        onChange={(e) => setNameEN(e.target.value)}
-                        placeholder={t('name_en')}
-                        label={t('name_en')}
-                    />
-                </TableCell>
-                <TableCell>
-                    <TextField
-                        fullWidth
-                        value={nameZH}
-                        onChange={(e) => setNameZH(e.target.value)}
-                        placeholder={t('name_zh')}
-                        label={t('name_zh')}
                     />
                 </TableCell>
                 <TableCell align="right"></TableCell>

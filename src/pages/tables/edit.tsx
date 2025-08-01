@@ -54,19 +54,26 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
                         setErrorMessage(t('something_went_wrong'));
                     }
                 })
+        } else {
+            setErrorMessage(t('name_field_required'));
         }
     };
 
     return (
         <>
-            {errorMessage && <Alert sx={{ m: 1, mb: 2 }} severity="error">{errorMessage}</Alert>}
+            {errorMessage && (<TableRow>
+                <TableCell colSpan={2} sx={{ border: 0 }}>
+                    <Alert severity="error">{errorMessage}</Alert>
+                </TableCell>
+            </TableRow>)}
             <TableRow>
                 <TableCell>
                 </TableCell>

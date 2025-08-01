@@ -41,8 +41,6 @@ export default function Page() {
         return <div>{t('loading')}...</div>;
     }
 
-    console.log(data)
-
     return (
         <Box>
             {errorMessage && (

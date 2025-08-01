@@ -11,6 +11,7 @@
   "name": "Name",
   "name_en": "Name (EN)",
   "name_zh": "Name (ZH)",
+  "name_ko": "Name (KO)",
 
   "role": "Role",
   "created_at": "Created At",
@@ -48,6 +49,7 @@
   "dish_availability": "Dish Availability",
   "description_en": "Description (EN)",
   "description_zh": "Description (ZH)",
+  "description_ko": "Description (KO)",
 
   "restaurant_name": "Restaurant Name",
   "restaurant_logo": "Restaurant Logo",
@@ -107,5 +109,14 @@
   "payment_orders_summary": "Payment Orders Summary",
   "payment_method": "Payment Method",
   "payment_methods_pie_chart": "Payment Methods Pie Chart",
-  "currency_unit": "$"
+  "currency_unit": "$",
+  "from_date": "From",
+  "to_date": "To",
+  "no_file_selected": "No file selected",
+  "upload_image": "Upload Image",
+  "role_field_required": "The role field is required.",
+  "password_field_required": "The password field is required.",
+  "unit_field_required": "The unit field is required.",
+  "categories_field_required": "The categories field is required.",
+  "password_reset_success": "Reset password successfully."
 }

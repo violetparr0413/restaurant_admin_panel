@@ -21,6 +21,7 @@ export default function Page() {
 
     const [data, setData] = useState<Employee[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
+    const [infoMessage, setInfoMessage] = useState('');
 
     const refresh = () => {
         api.get('/employee') // your server endpoint
@@ -44,9 +45,12 @@ export default function Page() {
     return (
         <Box>
             {errorMessage && (
-                <Alert severity="error">{errorMessage}</Alert>
+                <Alert sx={{mb:1}} severity="error">{errorMessage}</Alert>
             )}
-            <Table rows={data} />
+            {infoMessage && (
+                <Alert sx={{mb:1}} severity="success">{infoMessage}</Alert>
+            )}
+            <Table rows={data} info={setInfoMessage} error={setErrorMessage}/>
         </Box>
     )
 }

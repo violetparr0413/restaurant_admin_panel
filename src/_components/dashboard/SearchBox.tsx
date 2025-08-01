@@ -19,14 +19,29 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
   const [fromDate, setFromDate] = React.useState(today);
   const [toDate, setToDate] = React.useState(today);
 
+  const fromDateRef = React.useRef(fromDate);
+  const toDateRef = React.useRef(toDate);
+
+  // Keep refs in sync with current state
+  useEffect(() => {
+    fromDateRef.current = fromDate;
+  }, [fromDate]);
+
+  useEffect(() => {
+    toDateRef.current = toDate;
+  }, [toDate]);
+
   const [errorMessage, setErrorMessage] = React.useState('');
 
   const handleSearch = () => {
-    if (fromDate && toDate) {
+    const currentFromDate = fromDateRef.current;
+    const currentToDate = toDateRef.current;
+
+    if (currentFromDate && currentToDate) {
       const formData = new FormData();
 
-      formData.append('from_date', fromDate);
-      formData.append('to_date', toDate);
+      formData.append('from_date', currentFromDate);
+      formData.append('to_date', currentToDate);
 
       api.post('/get-statistics', formData)
         // .then(res => refresh(res.data))
@@ -38,22 +53,29 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
           if (error.response && error.response.status === 422) {
             // Validation error from server
             console.log(error.response.data);
-            setErrorMessage(error.response.data.message);
+            // setErrorMessage(error.response.data.message);
+            setErrorMessage(t('something_went_wrong'));
           } else {
             // Other errors
             console.error(t('unexpected_error'), error);
             setErrorMessage(t('something_went_wrong'));
           }
         })
-    } else if (!fromDate) {
+    } else if (!currentFromDate) {
       setErrorMessage(t('from_date_field_required'));
-    } else if (!toDate) {
+    } else if (!currentToDate) {
       setErrorMessage(t('to_date_field_required'));
     }
   };
 
   useEffect(() => {
     handleSearch()
+
+    const interval = setInterval(() => {
+      handleSearch();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -81,7 +103,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
         )}
         <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
-            label="From"
+            label={t('from_date')}
             type="date"
             variant="outlined"
             fullWidth
@@ -93,7 +115,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
-            label="To"
+            label={t('to_date')}
             type="date"
             variant="outlined"
             fullWidth

@@ -130,7 +130,7 @@ export default function Page({ rows }: TableProps) {
     const handleChangeRowsPerPage = (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
-        setRowsPerPage(parseInt(event.target.value, 25));
+        setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
 
@@ -183,7 +183,7 @@ export default function Page({ rows }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={3}
+                            colSpan={6}
                             count={rows?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

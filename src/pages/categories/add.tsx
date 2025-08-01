@@ -14,6 +14,7 @@ import { Category } from '@/utils/info';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import ImageUploader from '@/_components/ImageUploader';
+import { useRouter } from 'next/router';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -33,22 +34,29 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
-    const [nameJP, setNameJP] = useState<string>('');
-    const [nameEN, setNameEN] = useState<string>('');
-    const [nameCN, setNameCN] = useState<string>('');
+    const [name, setName] = useState<string>('');
     const [image, setImage] = useState<File | null>(null);
 
     const [errorMessage, setErrorMessage] = useState('');
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+    }, [locale]);
+
     const handleSave = () => {
-        if ((nameJP || nameEN || nameCN) && image) {
+        if ((name) && image) {
             const formData = new FormData();
 
-            formData.append('category_name', nameJP);
-            formData.append('category_en_name', nameEN);
-            formData.append('category_zh_name', nameCN);
-            formData.append('category_image', image);
+            locale === 'en' ? formData.append('category_en_name', name) :
+                locale === 'zh' ? formData.append('category_zh_name', name) :
+                    locale === 'ko' ? formData.append('category_ko_name', name) :
+                        formData.append('category_name', name);
 
+            (locale !== 'ja') && formData.append('category_name', name);
+
+            formData.append('category_image', image);
             parent && formData.append('parent_id', parent.toString());
 
             uploader.post('/category', formData)
@@ -57,14 +65,15 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
                         setErrorMessage(t('something_went_wrong'));
                     }
                 })
-        } else if (!nameJP) {
+        } else if (!name) {
             setErrorMessage(t('name_field_required'));
         } else if (!image) {
             setErrorMessage(t('image_field_required'));
@@ -75,7 +84,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={7} sx={{ border: 0 }}>
+                    <TableCell colSpan={5} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
@@ -84,29 +93,11 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
                 <TableCell></TableCell>
                 <TableCell>
                     <TextField
-                        value={nameJP}
-                        onChange={(e) => setNameJP(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
                         fullWidth
                         label={t('name')}
-                    />
-                </TableCell>
-                <TableCell>
-                    <TextField
-                        value={nameEN}
-                        onChange={(e) => setNameEN(e.target.value)}
-                        placeholder={t('name_en')}
-                        fullWidth
-                        label={t('name_en')}
-                    />
-                </TableCell>
-                <TableCell>
-                    <TextField
-                        value={nameCN}
-                        onChange={(e) => setNameCN(e.target.value)}
-                        placeholder={t('name_zh')}
-                        fullWidth
-                        label={t('name_zh')}
                     />
                 </TableCell>
                 <TableCell>
@@ -115,7 +106,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
                         if (target.files && target.files[0]) {
                             setImage(target.files[0]);
                         }
-                    } } imageFile={image} imageFilePath={''} />
+                    }} imageFile={image} imageFilePath={''} />
                 </TableCell>
                 <TableCell align="right"></TableCell>
                 <TableCell>

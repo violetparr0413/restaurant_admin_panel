@@ -40,7 +40,8 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
           if (error.response && error.response.status === 422) {
             // Validation error from server
             console.log(error.response.data);
-            setErrorMessage(error.response.data.message);
+            // setErrorMessage(error.response.data.message);
+            setErrorMessage(t('something_went_wrong'));
           } else {
             // Other errors
             console.error(t('unexpected_error'), error);
@@ -56,6 +57,12 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   useEffect(() => {
     handleSearch()
+
+    const interval = setInterval(() => {
+      handleSearch(); // Refresh every 5 seconds
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -83,7 +90,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
         )}
         <Grid size={{ xs: 12, sm: 3 }}>
           <TextField
-            label="Dish"
+            label={t('dish')}
             variant="outlined"
             fullWidth
             size="small"
@@ -93,7 +100,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
-            label="Table"
+            label={t('table')}
             variant="outlined"
             fullWidth
             size="small"
@@ -118,7 +125,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
-            label="From"
+            label={t('from_date')}
             type="date"
             variant="outlined"
             fullWidth
@@ -130,7 +137,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
-            label="To"
+            label={t('to_date')}
             type="date"
             variant="outlined"
             fullWidth

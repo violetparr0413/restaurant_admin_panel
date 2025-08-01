@@ -18,16 +18,8 @@ import { deepOrange, green } from '@mui/material/colors';
 import { CancelOutlined } from '@mui/icons-material';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import DishImagePreview from '@/_components/ImagePreview';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 type DeletePanelProps = {
     row: Dish;
@@ -51,23 +43,28 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
             })
     };
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+    }, [locale]);
+
     return (
         <>
-            {errorMessage && (
-                <Alert severity="error">{errorMessage}</Alert>
-            )}
+            {errorMessage && (<TableRow>
+                <TableCell colSpan={5} sx={{ border: 0 }}>
+                    <Alert severity="error">{errorMessage}</Alert>
+                </TableCell>
+            </TableRow>)}
             <TableRow key={row?.dish_id}>
                 <TableCell component="th" scope="row">
                     {row?.category.category_name}
                 </TableCell>
                 <TableCell>
-                    {row?.dish_name}
-                </TableCell>
-                <TableCell>
-                    {row?.dish_en_name}
-                </TableCell>
-                <TableCell>
-                    {row?.dish_zh_name}
+                    {locale === 'en' ? row?.dish_en_name :
+                        locale === 'zh' ? row?.dish_zh_name :
+                            locale === 'ko' ? row?.dish_ko_name :
+                                row?.dish_name}
                 </TableCell>
                 <TableCell>
                     {row?.dish_image ? (<DishImagePreview

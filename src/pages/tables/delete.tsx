@@ -47,9 +47,11 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     return (
         <>
-            {errorMessage && (
-                <Alert severity="error">{errorMessage}</Alert>
-            )}
+            {errorMessage && (<TableRow>
+                <TableCell colSpan={4} sx={{ border: 0 }}>
+                    <Alert severity="error">{errorMessage}</Alert>
+                </TableCell>
+            </TableRow>)}
             <TableRow>
                 <TableCell>
                 </TableCell>

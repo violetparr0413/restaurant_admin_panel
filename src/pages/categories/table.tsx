@@ -22,7 +22,6 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import DishImagePreview from '@/_components/ImagePreview';
 
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
@@ -36,20 +35,14 @@ import {
   DraggableStateSnapshot,
 } from "@hello-pangea/dnd";
 import api, { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-    },
-  };
-}
+import { useRouter } from 'next/router';
 
 interface RowProps {
   row: Category
   onDelete: (data: Category) => void
   provided: DraggableProvided
   snapshot: DraggableStateSnapshot
+  locale: string
 }
 
 const StyledSubTableCell = styled(TableCell)(({ theme }) => ({
@@ -59,7 +52,7 @@ const StyledSubTableCell = styled(TableCell)(({ theme }) => ({
   }
 }));
 
-function Row({ row, onDelete, provided, snapshot }: RowProps) {
+function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
   const [open, setOpen] = React.useState(false);
   const { t } = useTranslation('common')
 
@@ -72,6 +65,7 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
     category_name: '',
     category_en_name: '',
     category_zh_name: '',
+    category_ko_name: '',
     parent_id: row?.category_id,
     category_image: '',
     category_order: 0,
@@ -150,9 +144,49 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
 
     formData.append("_method", "put")
 
-    formData.append('category_name', row?.category_name);
+    // formData.append('category_name', row?.category_name);
     formData.append('parent_id', row?.parent_id.toString());
     formData.append('category_order', order.toString());
+
+    api.post(`/category/${row?.category_id}`, formData)
+      .then(res => { })
+      .catch(error => {
+        if (error.response && error.response.status === 422) {
+          // Validation error from server
+          console.log(error.response.data);
+        } else {
+          // Other errors
+          console.error(t('unexpected_error'), error);
+        }
+      })
+  }
+
+  const increaseOrder = (row: Category) => {
+    const formData = new FormData();
+
+    formData.append("_method", "put")
+
+    formData.append('category_order', (row?.category_order + 1).toString());
+
+    api.post(`/category/${row?.category_id}`, formData)
+      .then(res => { })
+      .catch(error => {
+        if (error.response && error.response.status === 422) {
+          // Validation error from server
+          console.log(error.response.data);
+        } else {
+          // Other errors
+          console.error(t('unexpected_error'), error);
+        }
+      })
+  }
+
+  const decreaseOrder = (row: Category) => {
+    const formData = new FormData();
+
+    formData.append("_method", "put")
+
+    formData.append('category_order', (row?.category_order - 1).toString());
 
     api.post(`/category/${row?.category_id}`, formData)
       .then(res => { })
@@ -173,11 +207,18 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
     const items = Array.from(rowData.childs ? rowData.childs : []);
     if (!items) return;
 
-    updateOrder(items[result.destination.index], items[result.source.index].category_order)
-    updateOrder(items[result.source.index], items[result.destination.index].category_order)
+    const source_index = result.source.index
+    const destination_index = result.destination.index
 
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    if (destination_index > source_index) {
+      for (let i = source_index + 1; i <= destination_index; i++) decreaseOrder(items[i])
+    } else {
+      for (let i = destination_index; i < source_index; i++) increaseOrder(items[i])
+    }
+    updateOrder(items[source_index], items[destination_index].category_order)
+
+    const [reorderedItem] = items.splice(source_index, 1);
+    items.splice(destination_index, 0, reorderedItem);
 
     rowData.childs = [...items];
 
@@ -226,10 +267,11 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
         ) : (
           <>
             <TableCell component="th" scope="row">
-              {rowData.category_name}
+              {locale === 'en' ? rowData?.category_en_name :
+                locale === 'zh' ? rowData?.category_zh_name :
+                  locale === 'ko' ? rowData?.category_ko_name :
+                    rowData?.category_name}
             </TableCell>
-            <TableCell>{rowData.category_en_name}</TableCell>
-            <TableCell>{rowData.category_zh_name}</TableCell>
             <TableCell>
               {rowData.category_image ? (<DishImagePreview
                 src={process.env.NEXT_PUBLIC_API_BASE_URL2 + rowData.category_image}
@@ -238,7 +280,7 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
             <TableCell align="right">
               {convertDateTime(rowData?.created_at)}
             </TableCell>
-            <TableCell style={{ width: 160 }}>
+            <TableCell>
               <IconButton
                 aria-label="edit"
                 color="primary"
@@ -262,7 +304,7 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} />
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 1 }}>
               <Typography variant="h6" gutterBottom component="div">
@@ -274,12 +316,10 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
                     <TableRow>
                       <StyledSubTableCell sx={{ width: 50 }} />
                       <StyledSubTableCell sx={{ width: 50 }} />
-                      <StyledSubTableCell>{t('name')}</StyledSubTableCell>
-                      <StyledSubTableCell>{t('name_en')}</StyledSubTableCell>
-                      <StyledSubTableCell>{t('name_zh')}</StyledSubTableCell>
-                      <StyledSubTableCell>{t('image')}</StyledSubTableCell>
-                      <StyledSubTableCell align="right">{t('created_at')}</StyledSubTableCell>
-                      <StyledSubTableCell style={{ width: 160 }}>
+                      <StyledSubTableCell sx={{ width: 160 }}>{t('name')}</StyledSubTableCell>
+                      <StyledSubTableCell sx={{ width: 240 }}>{t('image')}</StyledSubTableCell>
+                      <StyledSubTableCell sx={{ width: 240 }} align="right">{t('created_at')}</StyledSubTableCell>
+                      <StyledSubTableCell sx={{ width: 160 }}>
                         <IconButton aria-label="add"
                           color="warning"
                           onClick={() => handleSubAddClick()}
@@ -333,10 +373,11 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
                                 ) : (
                                   <>
                                     <TableCell component="th" scope="row">
-                                      {childRow.category_name}
+                                      {locale === 'en' ? childRow?.category_en_name :
+                                        locale === 'zh' ? childRow?.category_zh_name :
+                                          locale === 'ko' ? childRow?.category_ko_name :
+                                            childRow?.category_name}
                                     </TableCell>
-                                    <TableCell>{childRow.category_en_name}</TableCell>
-                                    <TableCell>{childRow.category_zh_name}</TableCell>
                                     <TableCell>
                                       {childRow.category_image ? (<DishImagePreview
                                         src={process.env.NEXT_PUBLIC_API_BASE_URL2 + childRow.category_image}
@@ -345,7 +386,7 @@ function Row({ row, onDelete, provided, snapshot }: RowProps) {
                                     <TableCell align="right">
                                       {convertDateTime(childRow?.created_at)}
                                     </TableCell>
-                                    <TableCell style={{ width: 160 }}>
+                                    <TableCell>
                                       <IconButton
                                         aria-label="edit"
                                         color="secondary"
@@ -403,9 +444,17 @@ export default function CollapsibleTable({ rows }: TableProps) {
   const [view, setView] = React.useState('hide'); // can be 'hide', 'add'
   const [rowsData, setRows] = React.useState(rows); // can be 'hide', 'add'
 
+  const router = useRouter();
+  const { locale } = router;
+
+  const [initialized, setInitialized] = React.useState(false);
+
   React.useEffect(() => {
-    setRows(rows);
-  }, [rows]);
+    if (!initialized && rows.length > 0) {
+      setRows(rows);
+      setInitialized(true);
+    }
+  }, [rows, initialized]);
 
   const handleBackClick = () => {
     setView('hide');
@@ -417,9 +466,8 @@ export default function CollapsibleTable({ rows }: TableProps) {
   };
 
   const handleDeleteClick = (data: Category) => {
-    const index = rowsData?.indexOf(data)
-    if (index !== -1) rowsData?.splice(index, 1);
-    setRows(rowsData?.filter(row => row !== data))
+    const newData = rowsData?.filter(row => row?.category_id !== data.category_id);
+    setRows(newData);
   }
 
   const handleAddClick = () => {
@@ -431,8 +479,47 @@ export default function CollapsibleTable({ rows }: TableProps) {
 
     formData.append("_method", "put")
 
-    formData.append('category_name', row?.category_name);
     formData.append('category_order', order.toString());
+
+    api.post(`/category/${row?.category_id}`, formData)
+      .then(res => { })
+      .catch(error => {
+        if (error.response && error.response.status === 422) {
+          // Validation error from server
+          console.log(error.response.data);
+        } else {
+          // Other errors
+          console.error(t('unexpected_error'), error);
+        }
+      })
+  }
+
+  const increaseOrder = (row: Category) => {
+    const formData = new FormData();
+
+    formData.append("_method", "put")
+
+    formData.append('category_order', (row?.category_order + 1).toString());
+
+    api.post(`/category/${row?.category_id}`, formData)
+      .then(res => { })
+      .catch(error => {
+        if (error.response && error.response.status === 422) {
+          // Validation error from server
+          console.log(error.response.data);
+        } else {
+          // Other errors
+          console.error(t('unexpected_error'), error);
+        }
+      })
+  }
+
+  const decreaseOrder = (row: Category) => {
+    const formData = new FormData();
+
+    formData.append("_method", "put")
+
+    formData.append('category_order', (row?.category_order - 1).toString());
 
     api.post(`/category/${row?.category_id}`, formData)
       .then(res => { })
@@ -452,11 +539,18 @@ export default function CollapsibleTable({ rows }: TableProps) {
 
     const items = Array.from(rowsData);
 
-    updateOrder(items[result.destination.index], items[result.source.index].category_order)
-    updateOrder(items[result.source.index], items[result.destination.index].category_order)
+    const source_index = result.source.index
+    const destination_index = result.destination.index
 
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    if (destination_index > source_index) {
+      for (let i = source_index + 1; i <= destination_index; i++) decreaseOrder(items[i])
+    } else {
+      for (let i = destination_index; i < source_index; i++) increaseOrder(items[i])
+    }
+    updateOrder(items[source_index], items[destination_index].category_order)
+
+    const [reorderedItem] = items.splice(source_index, 1);
+    items.splice(destination_index, 0, reorderedItem);
 
     setRows(items);
   };
@@ -470,12 +564,10 @@ export default function CollapsibleTable({ rows }: TableProps) {
               <TableRow>
                 <StyledTableCell sx={{ width: 50 }} />
                 <StyledTableCell sx={{ width: 50 }} />
-                <StyledTableCell sx={{ minWidth: 160 }}>{t('name')}</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 160 }}>{t('name_en')}</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 160 }}>{t('name_zh')}</StyledTableCell>
-                <StyledTableCell>{t('image')}</StyledTableCell>
-                <StyledTableCell align="right">{t('created_at')}</StyledTableCell>
-                <StyledTableCell sx={{ minWidth: 160 }}>
+                <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 240 }}>{t('image')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 240 }} align="right">{t('created_at')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 160 }}>
                   <IconButton aria-label="add"
                     color="info"
                     onClick={handleAddClick}
@@ -501,7 +593,7 @@ export default function CollapsibleTable({ rows }: TableProps) {
                       index={index}
                     >
                       {(provided, snapshot) => (
-                        <Row key={row?.category_id} row={row} onDelete={handleDeleteClick} provided={provided} snapshot={snapshot} />
+                        <Row key={row?.category_id} row={row} onDelete={handleDeleteClick} provided={provided} snapshot={snapshot} locale={locale} />
                       )}
                     </Draggable>
                   ))}

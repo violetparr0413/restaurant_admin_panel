@@ -15,11 +15,11 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 export async function getStaticProps({ locale }: { locale: string }) {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-    },
-  };
+    return {
+        props: {
+            ...(await serverSideTranslations(locale, ['common'])),
+        },
+    };
 }
 
 type AddPanelProps = {
@@ -47,7 +47,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);

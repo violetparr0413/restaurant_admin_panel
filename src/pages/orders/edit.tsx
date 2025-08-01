@@ -91,7 +91,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);

@@ -25,16 +25,8 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -120,11 +112,14 @@ export default function Page({ rows }: TableProps) {
     const { t } = useTranslation('common')
 
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Service | null>(null);
+
+    const router = useRouter();
+    const { locale } = router;
 
     React.useEffect(() => {
         setRows(rows);
@@ -186,8 +181,6 @@ export default function Page({ rows }: TableProps) {
                 <TableHead>
                     <TableRow>
                         <StyledTableCell>{t('name')}</StyledTableCell>
-                        <StyledTableCell>{t('name_en')}</StyledTableCell>
-                        <StyledTableCell>{t('name_zh')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>
                             <IconButton aria-label="add"
@@ -222,13 +215,10 @@ export default function Page({ rows }: TableProps) {
                         ) : (
                             <TableRow key={row?.service_id}>
                                 <TableCell component="th" scope="row">
-                                    {row?.service_name}
-                                </TableCell>
-                                <TableCell>
-                                    {row?.service_en_name}
-                                </TableCell>
-                                <TableCell>
-                                    {row?.service_zh_name}
+                                    {locale === 'en' ? row?.service_en_name :
+                                        locale === 'zh' ? row?.service_zh_name :
+                                            locale === 'ko' ? row?.service_ko_name :
+                                                row?.service_name}
                                 </TableCell>
                                 <TableCell style={{ width: 160 }} align="right">
                                     {convertDateTime(row?.created_at)}
@@ -257,7 +247,7 @@ export default function Page({ rows }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={5} />
+                            <TableCell colSpan={3} />
                         </TableRow>
                     )}
                 </TableBody>

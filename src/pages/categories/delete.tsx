@@ -15,6 +15,7 @@ import api, { convertDateTime } from '@/utils/http_helper';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import DishImagePreview from '@/_components/ImagePreview';
+import { useRouter } from 'next/router';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -47,22 +48,25 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
             })
     };
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+    }, [locale]);
+
     return (
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={6} sx={{ border: 0 }}>
+                    <TableCell colSpan={5} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
             <TableCell>
-                {row?.category_name}
-            </TableCell>
-            <TableCell>
-                {row?.category_en_name}
-            </TableCell>
-            <TableCell>
-                {row?.category_zh_name}
+                {locale === 'en' ? row?.category_en_name :
+                    locale === 'zh' ? row?.category_zh_name :
+                        locale === 'ko' ? row?.category_ko_name :
+                            row?.category_name}
             </TableCell>
             <TableCell>
                 {row?.category_image ? (<DishImagePreview

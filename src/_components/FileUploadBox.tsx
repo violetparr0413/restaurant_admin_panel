@@ -6,12 +6,15 @@ import {
     Stack,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useTranslation } from 'next-i18next';
 
 type FileUploadProps = {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 const FileUpload: React.FC<FileUploadProps> = ({ onChange }) => {
+    const { t } = useTranslation('common')
+
     const [fileName, setFileName] = useState<string>('');
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -52,10 +55,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onChange }) => {
                         color: 'white', // ensure text stays readable
                     }}
                 >
-                    Upload Image
+                    {t('upload_image')}
                 </Button>
                 <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                    {fileName || 'No file selected'}
+                    {fileName || t('no_file_selected')}
                 </Typography>
             </Stack>
         </Box>

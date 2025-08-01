@@ -27,18 +27,10 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { deepOrange, green } from '@mui/material/colors';
 import DishImagePreview from '@/_components/ImagePreview';
 import { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -124,11 +116,14 @@ export default function Page({ rows }: TableProps) {
     const { t } = useTranslation('common')
 
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Dish | null>(null);
+
+    const router = useRouter();
+    const { locale } = router;
 
     React.useEffect(() => {
         setRows(rows);
@@ -189,15 +184,13 @@ export default function Page({ rows }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell>{t('category')}</StyledTableCell>
-                        <StyledTableCell>{t('name')}</StyledTableCell>
-                        <StyledTableCell>{t('name_en')}</StyledTableCell>
-                        <StyledTableCell>{t('name_zh')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 200 }}>{t('category')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 200 }}>{t('name')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 80 }}>{t('image')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 120 }}>{t('price')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 100 }}>{t('available')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 240 }}>{t('created_at')}</StyledTableCell>
-                        <StyledTableCell>
+                        <StyledTableCell sx={{ width: 200 }}>
                             <IconButton aria-label="add"
                                 color="info"
                                 onClick={handleAddClick}
@@ -230,16 +223,16 @@ export default function Page({ rows }: TableProps) {
                         ) : (
                             <TableRow key={row?.dish_id}>
                                 <TableCell component="th" scope="row">
-                                    {row?.category.category_name}
+                                    {locale === 'en' ? row?.category.category_en_name :
+                                        locale === 'zh' ? row?.category.category_zh_name :
+                                            locale === 'ko' ? row?.category.category_ko_name :
+                                                row?.category.category_name}
                                 </TableCell>
                                 <TableCell>
-                                    {row?.dish_name}
-                                </TableCell>
-                                <TableCell>
-                                    {row?.dish_en_name}
-                                </TableCell>
-                                <TableCell>
-                                    {row?.dish_zh_name}
+                                    {locale === 'en' ? row?.dish_en_name :
+                                        locale === 'zh' ? row?.dish_zh_name :
+                                            locale === 'ko' ? row?.dish_ko_name :
+                                                row?.dish_name}
                                 </TableCell>
                                 <TableCell>
                                     {row?.dish_image ? (<DishImagePreview
@@ -283,7 +276,7 @@ export default function Page({ rows }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={9} />
+                            <TableCell colSpan={7} />
                         </TableRow>
                     )}
                 </TableBody>
@@ -291,7 +284,7 @@ export default function Page({ rows }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={3}
+                            colSpan={7}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

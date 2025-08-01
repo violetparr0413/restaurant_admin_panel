@@ -41,7 +41,7 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                     <Card>
                         <CardContent>
                             <Typography variant="subtitle1">{t('total_paid')}</Typography>
-                            <Typography variant="h5">{t('currency_unit')} {statistics?.paidTotal}</Typography>
+                            <Typography variant="h5">円 {statistics?.paidTotal}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -51,7 +51,7 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                     <Card>
                         <CardContent>
                             <Typography variant="subtitle1">{t('total_unpaid')}</Typography>
-                            <Typography variant="h5">{t('currency_unit')} {statistics?.unpaidTotal}</Typography>
+                            <Typography variant="h5">円 {statistics?.unpaidTotal}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -80,7 +80,7 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                                         <TableRow key={order.dish_id}>
                                             <TableCell>{order.dish?.dish_name || "N/A"}</TableCell>
                                             <TableCell>{order.total_qty}</TableCell>
-                                            <TableCell>{t('currency_unit')} {order.total_value}</TableCell>
+                                            <TableCell>円 {order.total_value}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -134,7 +134,7 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                                     {statistics?.paymentOrders?.map((order) => (
                                         <TableRow key={order.payment_method_id}>
                                             <TableCell>{order.payment_method_name}</TableCell>
-                                            <TableCell>{t('currency_unit')} {order.total_value}</TableCell>
+                                            <TableCell>円 {order.total_value}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

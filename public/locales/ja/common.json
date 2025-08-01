@@ -3,33 +3,27 @@
   "username": "ユーザー名",
   "password": "パスワード",
   "something_wrong": "Something went wrong!",
-
   "login.enter_username": "ユーザー名を入力してください",
   "login.enter_password": "パスワードを入力してください",
   "login.credential_not_match": "認証情報が一致しません。",
-
   "name": "名前",
   "name_en": "名前（英語）",
   "name_zh": "名前（中国語）",
-
+  "name_ko": "名前（韓国語）",
   "role": "役割",
   "created_at": "作成日",
   "action": "操作",
   "rows_per_page": "ページあたりの行数",
   "dashboard": "ダッシュボード",
   "users": "ユーザー",
-
   "user.add": "追加",
-
   "category": "カテゴリ",
   "subcategory": "サブカテゴリ",
   "image": "画像",
-
   "price": "価格",
   "description": "説明",
   "unit": "単位",
   "available": "利用可能",
-
   "dish": "料理",
   "order": "注文",
   "employee": "従業員",
@@ -42,60 +36,49 @@
   "unexpected_error": "予期しないエラー：",
   "something_went_wrong": "問題が発生しました",
   "name_field_required": "名前は必須項目です。",
-
   "status": "状態",
-
   "dish_availability": "料理の在庫状況",
   "description_en": "説明（英語）",
   "description_zh": "説明（中国語）",
-  
+  "description_ko": "説明（韓国語）",
   "restaurant_name": "レストラン名",
   "restaurant_logo": "レストランロゴ",
   "restaurant_background": "レストラン背景",
-
   "brand_configuration": "ブランド設定",
   "upload_logo_file": "ロゴファイルをアップロード",
   "upload_images": "画像をアップロード",
-
   "duration": "期間",
   "duration_required": "期間は0より大きくする必要があります",
-
   "brand": "ブランド",
   "categories": "カテゴリ",
   "employees": "従業員",
   "dishes": "料理",
   "orders": "注文",
   "services": "サービス",
-
   "image_field_required": "画像は必須項目です。",
   "ip_address": "IPアドレス",
   "port": "ポート",
   "position": "位置",
   "ipaddress_field_required": "IPアドレスは必須項目です。",
   "port_field_required": "ポートは必須項目です。",
-  "position_field_required": "位置は必須項目です。", 
-
+  "position_field_required": "位置は必須項目です。",
   "save": "保存",
   "service_history": "サービス履歴",
   "tables": "テーブル",
   "printers": "プリンター",
   "payment_methods": "支払方法",
-
   "service": "サービス",
   "amount": "金額",
   "table": "テーブル",
   "manager": "マネージャー",
   "congratulation": "おめでとうございます！",
-
   "brand_logo_required": "ブランドロゴファイルが必要です",
   "screen_saver_after": "スクリーンセーバー間隔",
   "screen_saver_required": "スクリーンセーバー間隔が必要です",
   "backgroud_images_required": "背景画像が必要です",
-
   "from_date_field_required": "開始日の入力が必要です",
   "to_date_field_required": "終了日の入力が必要です",
   "order_search": "注文検索",
-
   "statistics": "統計",
   "total_paid": "合計支払済み",
   "total_unpaid": "合計未払い",
@@ -107,5 +90,14 @@
   "payment_orders_summary": "支払い注文概要",
   "payment_method": "支払い方法",
   "payment_methods_pie_chart": "支払い方法円グラフ",
-  "currency_unit": "円"
+  "currency_unit": "円",
+  "from_date": "開始日",
+  "to_date": "終了日",
+  "no_file_selected": "ファイルが選択されていません",
+  "upload_image": "画像をアップロード",
+  "role_field_required": "役割の入力は必須です。",
+  "password_field_required": "パスワードの入力は必須です。",
+  "unit_field_required": "単位の入力は必須です。",
+  "categories_field_required": "カテゴリの入力は必須です。",
+  "password_reset_success": "パスワードのリセットに成功しました。"
 }

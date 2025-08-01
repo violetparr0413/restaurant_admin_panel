@@ -13,15 +13,6 @@ import { User } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type DeletePanelProps = {
     row: User;

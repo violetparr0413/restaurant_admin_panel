@@ -12,16 +12,8 @@ import { convertDateTime, uploader } from '@/utils/http_helper';
 import { Category } from '../../utils/info';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import ImageUploader from '@/_components/ImageUploader';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 type EditPanelProps = {
     row: Category;
@@ -33,23 +25,33 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
-    const [nameJP, setNameJP] = useState<string>(row?.category_name);
-    const [nameEN, setNameEN] = useState<string>(row?.category_en_name);
-    const [nameCN, setNameCN] = useState<string>(row?.category_zh_name);
+    const [name, setName] = useState<string>(row?.category_name);
     const [image, setImage] = useState<File | null>(null);
 
     const [errorMessage, setErrorMessage] = useState('');
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+        const name = locale === 'en' ? row?.category_en_name :
+            locale === 'zh' ? row?.category_zh_name :
+                locale === 'ko' ? row?.category_ko_name :
+                    row?.category_name
+        setName(name ? name : '')
+    }, [locale]);
 
     const handleSave = () => {
-        if (nameJP) {
+        if (name) {
             const formData = new FormData();
 
             formData.append("_method", "put")
 
-            nameJP && formData.append('category_name', nameJP);
-            nameEN && formData.append('category_en_name', nameEN);
-            nameCN && formData.append('category_zh_name', nameCN);
+            locale === 'en' ? formData.append('category_en_name', name) :
+                locale === 'zh' ? formData.append('category_zh_name', name) :
+                    locale === 'ko' ? formData.append('category_ko_name', name) :
+                        formData.append('category_name', name);
+
             image && formData.append('category_image', image);
             formData.append('category_order', row?.category_order.toString());
             row?.parent_id && formData.append('parent_id', row?.parent_id.toString());
@@ -60,7 +62,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
@@ -76,35 +79,17 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={6} sx={{ border: 0 }}>
+                    <TableCell colSpan={5} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
             <TableCell>
                 <TextField
-                    value={nameJP}
-                    onChange={(e) => setNameJP(e.target.value)}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder={t('name')}
                     fullWidth
                     label={t('name')}
-                />
-            </TableCell>
-            <TableCell>
-                <TextField
-                    value={nameEN}
-                    onChange={(e) => setNameEN(e.target.value)}
-                    placeholder={t('name_en')}
-                    fullWidth
-                    label={t('name_en')}
-                />
-            </TableCell>
-            <TableCell>
-                <TextField
-                    value={nameCN}
-                    onChange={(e) => setNameCN(e.target.value)}
-                    placeholder={t('name_zh')}
-                    fullWidth
-                    label={t('name_zh')}
                 />
             </TableCell>
             <TableCell>

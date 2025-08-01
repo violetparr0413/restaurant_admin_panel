@@ -50,13 +50,16 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
                         setErrorMessage(t('something_went_wrong'));
                     }
                 })
+        } else {
+            setErrorMessage(t('name_field_required'));
         }
     };
 
@@ -64,7 +67,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={4} sx={{ border: 0 }}>
+                    <TableCell colSpan={2} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}

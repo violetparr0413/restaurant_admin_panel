@@ -16,7 +16,7 @@ import api, { uploader } from '@/utils/http_helper';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BrandLogoUpload from './logo';
-import BackgroundImagesUpload from './background';
+import ImageBulkUploader from './background';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -51,7 +51,7 @@ const BrandConfigPage = () => {
                 if (Object.keys(res.data).length !== 0) {
                     setBrandName(res.data?.restaurant_name)
                     setLogoPath(res.data?.restaurant_logo)
-                    setScreenInterval(res.data?.screenInterval)
+                    setScreenInterval(res.data?.screen_saver_after)
                     setDuration(res.data?.background_duration)
                     setImagePaths(JSON.parse(res.data?.restaurant_background))
                 }
@@ -78,27 +78,21 @@ const BrandConfigPage = () => {
         }
     };
 
-    const handleBgImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setBgImages(Array.from(e.target.files));
-        }
-    };
-
-    const handleRemove = (index: number) => {
-        setBgImages((prev) => prev.filter((_, i) => i !== index));
-    };
-
     const handleSave = () => {
-        if (brandName && brandLogo && (duration > 0)) {
+        if (brandName && (duration > 0) && (screenInterval > 0)) {
             const formData = new FormData();
 
             formData.append('restaurant_name', brandName);
             formData.append('background_duration', duration.toString());
             formData.append('screen_saver_after', screenInterval.toString());
-            formData.append('restaurant_logo', brandLogo);
+            brandLogo && formData.append('restaurant_logo', brandLogo);
 
             bgImages.forEach((file) => {
                 formData.append('restaurant_background[]', file);
+            });
+
+            imagePaths.forEach((path) => {
+                formData.append('old_restaurant_background[]', path);
             });
 
             uploader.post('/brand', formData)
@@ -110,7 +104,8 @@ const BrandConfigPage = () => {
                 .catch(error => {
                     if (error.response && error.response.status === 422) {
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                         setInfoMessage('');
                     } else {
                         console.error(t('unexpected_error'), error);
@@ -120,10 +115,8 @@ const BrandConfigPage = () => {
                 })
         } else {
             if (!brandName) setErrorMessage(t('name_field_required'));
-            if (!brandLogo) setErrorMessage(t('brand_logo_required'));
             if (!screenInterval) setErrorMessage(t('screen_saver_required'));
             if (!duration) setErrorMessage(t('duration_required'));
-            if (!bgImages.length) setErrorMessage(t('backgroud_images_required'));
             setInfoMessage('');
         }
     };
@@ -162,7 +155,7 @@ const BrandConfigPage = () => {
                         <Typography variant="subtitle1" gutterBottom>
                             {t('restaurant_background')}
                         </Typography>
-                        <BackgroundImagesUpload bgImages={bgImages} imagePaths={imagePaths} handleBgImagesChange={handleBgImagesChange} handleRemove={handleRemove} />
+                        <ImageBulkUploader bgImages={bgImages} imagePaths={imagePaths} handleFilesChange={setBgImages} handleImagePathsChange={setImagePaths} />
                     </Grid>
                     <Grid size={12}>
                         <Grid container spacing={2}>

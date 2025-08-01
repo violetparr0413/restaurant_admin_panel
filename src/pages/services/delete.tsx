@@ -14,6 +14,7 @@ import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useRouter } from 'next/router';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -35,6 +36,12 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     const [errorMessage, setErrorMessage] = useState('');
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+    }, [locale]);
+
     const handleDelete = () => {
         api.delete(`/service/${row?.service_id}`)
             .then(res => onDelete(row))
@@ -48,18 +55,17 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     return (
         <>
-            {errorMessage && (
-                <Alert severity="error">{errorMessage}</Alert>
-            )}
+            {errorMessage && (<TableRow>
+                <TableCell colSpan={2} sx={{ border: 0 }}>
+                    <Alert severity="error">{errorMessage}</Alert>
+                </TableCell>
+            </TableRow>)}
             <TableRow key={row?.service_id}>
                 <TableCell>
-                    {row?.service_name}
-                </TableCell>
-                <TableCell>
-                    {row?.service_en_name}
-                </TableCell>
-                <TableCell>
-                    {row?.service_zh_name}
+                    {locale === 'en' ? row?.service_en_name :
+                        locale === 'zh' ? row?.service_zh_name :
+                            locale === 'ko' ? row?.service_ko_name :
+                                row?.service_name}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

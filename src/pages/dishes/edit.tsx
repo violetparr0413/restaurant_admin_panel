@@ -17,19 +17,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
 import { Category, Dish, USER_ROLE } from '@/utils/info';
-import api, { uploader } from '@/utils/http_helper';
+import api, { convertDateTime, uploader } from '@/utils/http_helper';
 import FileUpload from '@/_components/FileUploadBox';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 type EditPanelProps = {
     row: Dish
@@ -50,10 +42,6 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const [image, setImage] = useState<File | null>(null);
     const [available, setAvailable] = useState<boolean>(row?.dish_available ? true : false);
     const [description, setDescription] = useState<string>(row?.dish_description);
-    const [nameEN, setNameEN] = useState<string>(row?.dish_en_name);
-    const [descriptionEN, setDescriptionEN] = useState<string>(row?.dish_en_description);
-    const [nameZH, setNameZH] = useState<string>(row?.dish_zh_name);
-    const [descriptionZH, setDescriptionZH] = useState<string>(row?.dish_zh_description);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -105,24 +93,46 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         getCategoryData()
     }, []);
 
+    const router = useRouter();
+    const { locale } = router;
+
+    React.useEffect(() => {
+        const name = locale === 'en' ? row?.dish_en_name :
+            locale === 'zh' ? row?.dish_zh_name :
+                locale === 'ko' ? row?.dish_ko_name :
+                    row?.dish_name
+        setName(name ? name : '')
+
+        const description = locale === 'en' ? row?.dish_en_description :
+            locale === 'zh' ? row?.dish_zh_description :
+                locale === 'ko' ? row?.dish_ko_description :
+                    row?.dish_description
+        setDescription(description ? description : '')
+    }, [locale]);
+
     const handleSave = () => {
         if (name && unit && categories) {
             const formData = new FormData();
 
             formData.append("_method", "put")
 
-            formData.append('dish_name', name);
+            locale === 'en' ? formData.append('dish_en_name', name) :
+                locale === 'zh' ? formData.append('dish_zh_name', name) :
+                    locale === 'ko' ? formData.append('dish_ko_name', name) :
+                        formData.append('dish_name', name);
+
+            if (description) {
+                locale === 'en' ? formData.append('dish_en_description', description) :
+                    locale === 'zh' ? formData.append('dish_zh_description', description) :
+                        locale === 'ko' ? formData.append('dish_ko_description', description) :
+                            formData.append('dish_description', description);
+            }
+
             formData.append('dish_unit', unit);
             image && formData.append('dish_image', image);
             subcategory ? formData.append('category_id', subcategory.toString()) : formData.append('category_id', category.toString());
             (price !== null) && formData.append('dish_price', price.toString());
             (available !== null) && formData.append('dish_available', available ? '1' : '0');
-            description && formData.append('dish_description', description);
-
-            nameEN && formData.append('dish_en_name', nameEN);
-            descriptionEN && formData.append('dish_en_description', descriptionEN);
-            nameZH && formData.append('dish_zh_name', nameZH);
-            descriptionZH && formData.append('dish_zh_description', descriptionZH);
 
             uploader.post(`/dish/${row?.dish_id}`, formData)
                 .then(res => onSave(res.data))
@@ -130,13 +140,18 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        setErrorMessage(error.response.data.message);
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);
                         setErrorMessage(t('something_went_wrong'));
                     }
                 })
+        } else {
+            if (!name) setErrorMessage(t('name_field_required'));
+            if (!unit) setErrorMessage(t('unit_field_required'));
+            if (!categories) setErrorMessage(t('categories_field_required'));
         }
     };
 
@@ -153,7 +168,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     return (
         <TableRow>
-            <TableCell colSpan={7}>
+            <TableCell colSpan={5}>
                 <Box
                     component="form"
                     sx={{ '& .MuiTextField-root': { m: 1, width: '25ch' } }}
@@ -172,7 +187,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                                         onCategoryChange(Number(e.target.value))
                                     }}
                                     displayEmpty
-                                    sx={{ mt: 1, ml: 1 }}
+                                    sx={{ mt: 1, ml: 1, mr: 1 }}
                                 >
                                     <MenuItem value={0}>{t('select')}</MenuItem>
                                     {categories?.map((x) => (
@@ -247,45 +262,9 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                             }} />
                         </Stack>
                     </div>
-                    <div>
-                        <Stack direction="row" spacing={2}>
-                            <TextField
-                                value={nameEN}
-                                onChange={(e) => setNameEN(e.target.value)}
-                                label={t('name_en')}
-                                placeholder={t('name_en')}
-                                sx={{ flex: 1 }}
-                            />
-                            <TextField
-                                value={descriptionEN}
-                                onChange={(e) => setDescriptionEN(e.target.value)}
-                                label={t('description_en')}
-                                placeholder={t('description_en')}
-                                sx={{ flex: 2 }}
-                            />
-                        </Stack>
-                    </div>
-                    <div>
-                        <Stack direction="row" spacing={2}>
-                            <TextField
-                                value={nameZH}
-                                onChange={(e) => setNameZH(e.target.value)}
-                                label={t('name_zh')}
-                                placeholder={t('name_zh')}
-                                sx={{ flex: 1 }}
-                            />
-                            <TextField
-                                value={descriptionZH}
-                                onChange={(e) => setDescriptionZH(e.target.value)}
-                                label={t('description_zh')}
-                                placeholder={t('description_zh')}
-                                sx={{ flex: 2 }}
-                            />
-                        </Stack>
-                    </div>
                 </Box>
             </TableCell>
-            <TableCell align="right"></TableCell>
+            <TableCell align="right">{convertDateTime(row?.created_at)}</TableCell>
             <TableCell>
                 <IconButton
                     aria-label="save"
