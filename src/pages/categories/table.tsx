@@ -449,6 +449,12 @@ export default function CollapsibleTable({ rows }: TableProps) {
 
   const [initialized, setInitialized] = React.useState(false);
 
+  const [maxHeight, setMaxHeight] = React.useState(0)
+
+  React.useEffect(() => {
+    setMaxHeight(document.documentElement.clientHeight - 120);
+  }, []);
+
   React.useEffect(() => {
     if (!initialized && rows.length > 0) {
       setRows(rows);
@@ -494,14 +500,14 @@ export default function CollapsibleTable({ rows }: TableProps) {
       })
   }
 
-  const increaseOrder = (row: Category) => {
+  const increaseOrder = async (row: Category) => {
     const formData = new FormData();
 
     formData.append("_method", "put")
 
     formData.append('category_order', (row?.category_order + 1).toString());
 
-    api.post(`/category/${row?.category_id}`, formData)
+    await api.post(`/category/${row?.category_id}`, formData)
       .then(res => { })
       .catch(error => {
         if (error.response && error.response.status === 422) {
@@ -514,14 +520,14 @@ export default function CollapsibleTable({ rows }: TableProps) {
       })
   }
 
-  const decreaseOrder = (row: Category) => {
+  const decreaseOrder = async (row: Category) => {
     const formData = new FormData();
 
     formData.append("_method", "put")
 
     formData.append('category_order', (row?.category_order - 1).toString());
 
-    api.post(`/category/${row?.category_id}`, formData)
+    await api.post(`/category/${row?.category_id}`, formData)
       .then(res => { })
       .catch(error => {
         if (error.response && error.response.status === 422) {
@@ -534,7 +540,7 @@ export default function CollapsibleTable({ rows }: TableProps) {
       })
   }
 
-  const handleOnDragEnd = (result: DropResult) => {
+  const handleOnDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(rowsData);
@@ -542,24 +548,47 @@ export default function CollapsibleTable({ rows }: TableProps) {
     const source_index = result.source.index
     const destination_index = result.destination.index
 
-    if (destination_index > source_index) {
-      for (let i = source_index + 1; i <= destination_index; i++) decreaseOrder(items[i])
-    } else {
-      for (let i = destination_index; i < source_index; i++) increaseOrder(items[i])
-    }
     updateOrder(items[source_index], items[destination_index].category_order)
 
-    const [reorderedItem] = items.splice(source_index, 1);
-    items.splice(destination_index, 0, reorderedItem);
+    if (destination_index > source_index) {
+      for (let i = source_index + 1; i <= destination_index; i++) { await decreaseOrder(items[i]) }
+    } else {
+      for (let i = destination_index; i < source_index; i++) {
+        await increaseOrder(items[i])
+      }
+    }
 
-    setRows(items);
+    // const [reorderedItem] = items.splice(source_index, 1);
+    // items.splice(destination_index, 0, reorderedItem);
+
+    // console.log(items)
+    // setRows(items);
+
+    api.get('/category') // your server endpoint
+      .then(res => {
+        const rows = res.data.sort((a, b) => (a.category_order < b.category_order ? -1 : 1));
+
+        const parentRows: (Category & { childs: Category[] })[] = rows
+          .filter(row => row?.parent_id === 0)
+          .map(parent => ({
+            ...parent,
+            childs: [] as Category[] // ensure fresh empty childs array each render
+          }));
+
+        setRows(parentRows);
+      })
+      .catch(error => {
+        if (error.response) {
+          console.error(t('unexpected_error'), error);
+        }
+      });
   };
 
   return (
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Paper component={Paper}>
-        <TableContainer>
-          <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
+        <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+          <Table sx={{ tableLayout: 'fixed' }} size="small" stickyHeader aria-label="sticky table">
             <TableHead>
               <TableRow>
                 <StyledTableCell sx={{ width: 50 }} />

@@ -12,11 +12,12 @@ import {
     Switch,
     Stack,
     Alert,
+    Grid,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Category, Dish, USER_ROLE } from '@/utils/info';
+import { Category, Dish } from '@/utils/info';
 import api, { uploader } from '@/utils/http_helper';
 import FileUpload from '@/_components/FileUploadBox';
 
@@ -32,14 +33,23 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
+    const DISH_STATUS = [
+        '---',
+        t('takeout'),
+        t('popular'),
+        t('extra'),
+    ];
+
     const [category, setCategory] = useState<number>(0);
     const [subcategory, setSubCategory] = useState<number>(0);
 
     const [name, setName] = useState<string>('');
     const [unit, setUnit] = useState<string>('');
     const [price, setPrice] = useState<number>(0);
+    const [status, setStatus] = useState<number>(0);
+    const [taxPrice, setTaxPrice] = useState<number>(0);
     const [image, setImage] = useState<File | null>(null);
-    const [available, setAvailable] = useState<boolean>(false);
+    const [available, setAvailable] = useState<boolean>(true);
     const [description, setDescription] = useState<string>('');
 
     const [errorMessage, setErrorMessage] = useState('');
@@ -73,7 +83,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     }, [locale]);
 
     const handleSave = () => {
-        if (name && unit && categories && image) {
+        if (name && categories) {
             const formData = new FormData();
 
             formData.append('dish_name', name);
@@ -83,21 +93,25 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     locale === 'ko' ? formData.append('dish_ko_name', name) :
                         formData.append('dish_name', name);
 
-            (locale !== 'ja') && formData.append('dish_name', name);
-
             if (description) {
-                locale === 'en' ? formData.append('dish_en_description', name) :
-                    locale === 'zh' ? formData.append('dish_zh_description', name) :
-                        locale === 'ko' ? formData.append('dish_ko_description', name) :
+                locale === 'en' ? formData.append('dish_en_description', description) :
+                    locale === 'zh' ? formData.append('dish_zh_description', description) :
+                        locale === 'ko' ? formData.append('dish_ko_description', description) :
                             formData.append('dish_description', description);
-
-                (locale !== 'ja') && formData.append('dish_description', description);
             }
 
-            formData.append('dish_unit', unit);
+            if (unit) {
+                locale === 'en' ? formData.append('dish_en_unit', unit) :
+                    locale === 'zh' ? formData.append('dish_zh_unit', unit) :
+                        locale === 'ko' ? formData.append('dish_ko_unit', unit) :
+                            formData.append('dish_unit', unit);
+            }
+
             image && formData.append('dish_image', image);
+            formData.append('dish_status', status.toString());
             subcategory ? formData.append('category_id', subcategory.toString()) : formData.append('category_id', category.toString());
             (price !== null) && formData.append('dish_price', price.toString());
+            (taxPrice !== null) && formData.append('tax_price', taxPrice.toString());
             (available !== null) && formData.append('dish_available', available ? '1' : '0');
 
             uploader.post('/dish', formData)
@@ -116,9 +130,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                 })
         } else {
             if (!name) setErrorMessage(t('name_field_required'));
-            if (!unit) setErrorMessage(t('unit_field_required'));
             if (!categories) setErrorMessage(t('categories_field_required'));
-            if (!image) setErrorMessage(t('image_field_required'));
         }
     };
 
@@ -135,103 +147,149 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
 
     return (
         <TableRow>
-            <TableCell colSpan={5}>
-                <Box
-                    component="form"
-                    sx={{ '& .MuiTextField-root': { m: 1, width: '25ch' } }}
-                    noValidate
-                    autoComplete="off"
-                >
-                    {errorMessage && <Alert sx={{ m: 1, mb: 2 }} severity="error">{errorMessage}</Alert>}
-                    <div>
-                        <Stack direction="row" spacing={2}>
-                            <FormControl sx={{ flex: 1 }}>
-                                <InputLabel>{t('category')}</InputLabel>
-                                <Select
-                                    value={category}
-                                    onChange={(e) => {
-                                        setCategory(Number(e.target.value))
-                                        onCategoryChange(Number(e.target.value))
-                                    }}
-                                    displayEmpty
-                                    sx={{ mt: 1, ml: 1, mr: 1 }}
-                                >
-                                    <MenuItem value={0}>{t('select')}</MenuItem>
-                                    {categories?.map((x) => (
-                                        <MenuItem value={x.category_id}>{x.category_name}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                            <FormControl sx={{ flex: 1 }}>
-                                <InputLabel>{t('subcategory')}</InputLabel>
-                                <Select
-                                    value={subcategory}
-                                    onChange={(e) => {
-                                        setSubCategory(Number(e.target.value))
-                                    }}
-                                    displayEmpty
-                                    sx={{ mt: 1, mr: 1 }}
-                                >
-                                    <MenuItem value={0}>{t('select')}</MenuItem>
-                                    {subCategories && subCategories?.map((x) => (
-                                        <MenuItem value={x.category_id}>{x.category_name}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                            <TextField
-                                value={name}
-                                required
-                                onChange={(e) => setName(e.target.value)}
-                                label={t('name')}
-                                placeholder={t('name')}
-                                sx={{ flex: 1 }}
-                            />
-                            <TextField
-                                value={unit}
-                                required
-                                onChange={(e) => setUnit(e.target.value)}
-                                label={t('unit')}
-                                placeholder={t('unit')}
-                                sx={{ flex: 1 }}
-                            />
-                            <TextField
-                                value={price}
-                                onChange={(e) => setPrice(Number(e.target.value))}
-                                label={t('price')}
-                                placeholder={t('price')}
-                                sx={{ flex: 1 }}
-                            />
-                        </Stack>
-                    </div>
-                    <div>
-                        <Stack sx={{ ml: 2 }} direction="row" spacing={2} alignItems="center">
-                            <FormControl component="fieldset" variant="standard">
-                                <FormControlLabel
-                                    control={
-                                        <Switch checked={available} onChange={(e) => setAvailable(e.target.checked)} name="gilad" />
-                                    }
-                                    sx={{ mr: 4 }}
-                                    label={t('dish_availability')}
+            <TableCell colSpan={8}>
+                <Box p={3}>
+                    <Grid container spacing={2}>
+                        {errorMessage && (
+                            <Grid size={{ xs: 12 }}>
+                                <Alert severity="error">{errorMessage}</Alert>
+                            </Grid>)}
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel>{t('category')}</InputLabel>
+                                    <Select
+                                        required
+                                        value={category}
+                                        onChange={(e) => {
+                                            setCategory(Number(e.target.value))
+                                            onCategoryChange(Number(e.target.value))
+                                        }}
+                                        label={t('category')}
+                                    >
+                                        <MenuItem value={0}>{t('select')}</MenuItem>
+                                        {categories?.map((x) => (
+                                            <MenuItem value={x.category_id}>
+                                                {locale === 'en' ? x?.category_en_name :
+                                                    locale === 'zh' ? x?.category_zh_name :
+                                                        locale === 'ko' ? x?.category_ko_name :
+                                                            x?.category_name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel>{t('subcategory')}</InputLabel>
+                                    <Select
+                                        required
+                                        value={subcategory}
+                                        onChange={(e) => {
+                                            setSubCategory(Number(e.target.value))
+                                        }}
+                                        label={t('subcategory')}
+                                    >
+                                        <MenuItem value={0}>{t('select')}</MenuItem>
+                                        {subCategories && subCategories?.map((x) => (
+                                            <MenuItem value={x.category_id}>
+                                                {locale === 'en' ? x?.category_en_name :
+                                                    locale === 'zh' ? x?.category_zh_name :
+                                                        locale === 'ko' ? x?.category_ko_name :
+                                                            x?.category_name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <FormControl fullWidth variant="outlined">
+                                    <InputLabel>{t('status')}</InputLabel>
+                                    <Select
+                                        required
+                                        value={status}
+                                        onChange={(e) => {
+                                            setStatus(Number(e.target.value))
+                                        }}
+                                        label={t('status')}
+                                    >
+                                        {Object.entries(DISH_STATUS)?.map(([key, value]) => (
+                                            <MenuItem key={key} value={key}>{value}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}></Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label={t('name')}
+                                    name="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                 />
-                            </FormControl>
-                            <TextField
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                label={t('description')}
-                                placeholder={t('description')}
-                                sx={{ flex: 2 }}
-                            />
-                            <FileUpload onChange={(e) => {
-                                const target = e.target as HTMLInputElement;
-                                if (target.files && target.files[0]) {
-                                    setImage(target.files[0]);
-                                }
-                            }} />
-                        </Stack>
-                    </div>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <TextField
+                                    fullWidth
+                                    label={t('unit')}
+                                    name="unit"
+                                    value={unit}
+                                    onChange={(e) => setUnit(e.target.value)}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <TextField
+                                    fullWidth
+                                    label={t('price')}
+                                    name="price"
+                                    value={price}
+                                    onChange={(e) => setPrice(Number(e.target.value))}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <TextField
+                                    fullWidth
+                                    label={t('tax_price')}
+                                    name="tax_price"
+                                    value={taxPrice}
+                                    onChange={(e) => setTaxPrice(Number(e.target.value))}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <FormControl component="fieldset" variant="standard">
+                                    <FormControlLabel
+                                        control={
+                                            <Switch checked={available} onChange={(e) => setAvailable(e.target.checked)} name="gilad" />
+                                        }
+                                        sx={{ mt: 1, ml: 1 }}
+                                        label={t('dish_availability')}
+                                    />
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <TextField
+                                    fullWidth
+                                    name="description"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    label={t('description')}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <FileUpload onChange={(e) => {
+                                    const target = e.target as HTMLInputElement;
+                                    if (target.files && target.files[0]) {
+                                        setImage(target.files[0]);
+                                    }
+                                }} />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
                 </Box>
             </TableCell>
-            <TableCell align="right"></TableCell>
             <TableCell>
                 <IconButton
                     aria-label="save"

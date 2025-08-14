@@ -6,23 +6,16 @@ import {
     Select,
     MenuItem,
     Alert,
+    Box,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Employee, USER_ROLE } from '@/utils/info';
+import { Employee } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import PasswordInput from '@/_components/PasswordInput';
 
 type AddPanelProps = {
     onBack: () => void;
@@ -33,16 +26,24 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     const [name, setName] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>('');
 
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleSave = () => {
-        if (name && role) {
+        if (name && role && password) {
             const formData = new FormData();
 
             formData.append('name', name);
+            formData.append('password', password);
             formData.append('role', role);
 
             api.post('/employee', formData)
@@ -75,20 +76,24 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                 </TableRow>)}
             <TableRow>
                 <TableCell>
-                    <TextField
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={t('name')}
-                        size="small"
-                        label={t('name')}
-                    />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder={t('name')}
+                            fullWidth
+                            required
+                            label={t('name')}
+                        />
+                        <PasswordInput password={password} setPassword={setPassword} required={true} />
+                    </Box>
                 </TableCell>
                 <TableCell>
                     <Select
                         value={role}
                         onChange={(e) => setRole(e.target.value as string)}
                         displayEmpty
-                        size="small"
+                        fullWidth
                         sx={{ minWidth: 120 }}
                     >
                         <MenuItem value="" disabled>{t('select')}</MenuItem>

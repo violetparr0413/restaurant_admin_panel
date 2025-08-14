@@ -12,19 +12,10 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Printer, PRINTER_POSITION } from '@/utils/info';
+import { Printer } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type EditPanelProps = {
     row: Printer,
@@ -35,6 +26,11 @@ type EditPanelProps = {
 const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
+
+    const PRINTER_POSITION = {
+        'COUNTER': t('counter'),
+        "KITCHEN": t('kitchen'),  
+    }
 
     const [ipAddress, setIpAddress] = useState<string>(row?.ip_address);
     const [port, setPort] = useState<string>(row?.port);

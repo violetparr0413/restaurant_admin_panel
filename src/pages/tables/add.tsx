@@ -10,7 +10,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Employee, USER_ROLE } from '@/utils/info';
+import { Employee } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';

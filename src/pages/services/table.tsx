@@ -118,6 +118,12 @@ export default function Page({ rows }: TableProps) {
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Service | null>(null);
 
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
+
     const router = useRouter();
     const { locale } = router;
 
@@ -176,8 +182,8 @@ export default function Page({ rows }: TableProps) {
     }
 
     return (
-        <TableContainer component={Paper}>
-            <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
+        <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+            <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
                         <StyledTableCell>{t('name')}</StyledTableCell>

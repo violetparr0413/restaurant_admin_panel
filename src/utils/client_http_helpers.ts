@@ -3,7 +3,7 @@ import Router from "next/router";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const api = axios.create({
+const clientApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
@@ -77,15 +77,30 @@ uploader.interceptors.response.use(
   }
 );
 
-api.interceptors.request.use((config) => {
+clientApi.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+  const employee_id = localStorage.getItem("employee_id");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (employee_id) {
+    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+        config.data = {
+            ...(config.data || {}),
+            employee_id: employee_id,
+        };
+    }
+    
+    // For requests with query params (GET, DELETE, etc.)
+    config.params = {
+        ...(config.params || {}),
+        employee_id: employee_id,
+    };
   }
   return config;
 });
 
-api.interceptors.response.use(
+clientApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -97,4 +112,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default clientApi;

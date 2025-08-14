@@ -115,6 +115,13 @@ interface TableProps {
 export default function Page({ rows }: TableProps) {
     const { t } = useTranslation('common')
 
+    const DISH_STATUS = [
+        '---',
+        t('takeout'),
+        t('popular'),
+        t('extra'),
+    ];
+
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -124,6 +131,12 @@ export default function Page({ rows }: TableProps) {
 
     const router = useRouter();
     const { locale } = router;
+
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
 
     React.useEffect(() => {
         setRows(rows);
@@ -180,15 +193,17 @@ export default function Page({ rows }: TableProps) {
     }
 
     return (
-        <TableContainer component={Paper}>
-            <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
+        <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+            <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell sx={{ width: 200 }}>{t('category')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }}>{t('name')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('category')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('subcategory')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 80 }}>{t('image')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 120 }}>{t('price')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 100 }}>{t('available')}</StyledTableCell>
+                        <StyledTableCell align="right" sx={{ width: 100 }}>{t('status')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 240 }}>{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }}>
                             <IconButton aria-label="add"
@@ -223,10 +238,25 @@ export default function Page({ rows }: TableProps) {
                         ) : (
                             <TableRow key={row?.dish_id}>
                                 <TableCell component="th" scope="row">
-                                    {locale === 'en' ? row?.category.category_en_name :
-                                        locale === 'zh' ? row?.category.category_zh_name :
-                                            locale === 'ko' ? row?.category.category_ko_name :
-                                                row?.category.category_name}
+                                    {row?.category.parent ? (
+                                        locale === 'en' ? row?.category.parent?.category_en_name :
+                                            locale === 'zh' ? row?.category.parent?.category_zh_name :
+                                                locale === 'ko' ? row?.category.parent?.category_ko_name :
+                                                    row?.category.parent?.category_name
+                                    ) : (
+                                        locale === 'en' ? row?.category.category_en_name :
+                                            locale === 'zh' ? row?.category.category_zh_name :
+                                                locale === 'ko' ? row?.category.category_ko_name :
+                                                    row?.category.category_name
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {row?.category.parent ? (
+                                        locale === 'en' ? row?.category.category_en_name :
+                                            locale === 'zh' ? row?.category.category_zh_name :
+                                                locale === 'ko' ? row?.category.category_ko_name :
+                                                    row?.category.category_name
+                                    ) : ('---')}
                                 </TableCell>
                                 <TableCell>
                                     {locale === 'en' ? row?.dish_en_name :
@@ -248,6 +278,9 @@ export default function Page({ rows }: TableProps) {
                                     </Avatar>) : (<Avatar sx={{ bgcolor: deepOrange[500], width: 32, height: 32 }}>
                                         <CancelOutlined />
                                     </Avatar>)}
+                                </TableCell>
+                                <TableCell align="right">
+                                    {DISH_STATUS[row?.dish_status]}
                                 </TableCell>
                                 <TableCell align="right">
                                     {convertDateTime(row?.created_at)}
@@ -276,7 +309,7 @@ export default function Page({ rows }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={7} />
+                            <TableCell colSpan={9} />
                         </TableRow>
                     )}
                 </TableBody>
@@ -284,7 +317,7 @@ export default function Page({ rows }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={7}
+                            colSpan={9}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

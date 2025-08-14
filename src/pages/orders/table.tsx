@@ -126,6 +126,12 @@ export default function Page({ rows }: TableProps) {
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Order | null>(null);
 
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
+
     React.useEffect(() => {
         setRows(rows);
     }, [rows]);
@@ -182,17 +188,16 @@ export default function Page({ rows }: TableProps) {
 
     return (
         <>
-            
-        <TableContainer component={Paper}>
-            <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
-                <TableHead>
-                    <TableRow>
-                        <StyledTableCell>{t('dish')}</StyledTableCell>
-                        <StyledTableCell>{t('table')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 160 }}>{t('order_quantity')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 160 }}>{t('order_status')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
-                        {/* <StyledTableCell sx={{ width: 160 }}>
+            <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+                <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
+                    <TableHead>
+                        <TableRow>
+                            <StyledTableCell>{t('dish')}</StyledTableCell>
+                            <StyledTableCell>{t('table')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }}>{t('order_quantity')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }}>{t('order_status')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
+                            {/* <StyledTableCell sx={{ width: 160 }}>
                             <IconButton aria-label="add"
                                 color="info"
                                 onClick={handleAddClick}
@@ -200,65 +205,65 @@ export default function Page({ rows }: TableProps) {
                                 <AddShoppingCartIcon />
                             </IconButton>
                         </StyledTableCell> */}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {view === 'add' && (
-                        <AddPanel onBack={handleBackClick} onSave={handleSaveClick} />
-                    )}
-                    {(rowsPerPage > 0 && rowsData
-                        ? rowsData?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                        : rowsData
-                    )?.map((row) => (
-                        view === 'edit' && editItem?.order_id === row?.order_id ? (
-                            <EditPanel
-                                row={row}
-                                onBack={handleBackClick}
-                                onSave={handleSaveClick}
-                            />
-                        ) : view === 'delete' && editItem?.order_id === row?.order_id ? (
-                            <DeletePanel
-                                row={row}
-                                onBack={handleBackClick}
-                                onDelete={handleDeleteReq}
-                            />
-                        ) : (
-                            <TableRow key={row?.order_id}>
-                                {row?.order_qty ? (
-                                    <>
-                                        <TableCell component="th" scope="row">
-                                            {row?.dish?.dish_name}
-                                        </TableCell>
-                                        <TableCell style={{ width: 160 }}>
-                                            {row?.employee?.name}
-                                        </TableCell>
-                                        <TableCell style={{ width: 160 }}>
-                                            {row?.order_qty}
-                                        </TableCell>
-                                    </>) : (
-                                    <>
-                                        <TableCell sx={{ textDecoration: 'line-through' }} component="th" scope="row">
-                                            {row?.dish?.dish_name}
-                                        </TableCell>
-                                        <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
-                                            {row?.employee?.name}
-                                        </TableCell>
-                                        <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
-                                            {row?.order_qty}
-                                        </TableCell>
-                                    </>
-                                )}
-                                <TableCell style={{ width: 160 }}>
-                                    {row?.order_status}
-                                </TableCell>
-                                {row?.order_qty ? (
-                                    <TableCell style={{ width: 160 }} align="right">
-                                        {convertDateTime(row?.created_at)}
-                                    </TableCell>) : (
-                                    <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }} align="right">
-                                        {convertDateTime(row?.created_at)}
-                                    </TableCell>)}
-                                {/* <TableCell style={{ width: 160 }}>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {view === 'add' && (
+                            <AddPanel onBack={handleBackClick} onSave={handleSaveClick} />
+                        )}
+                        {(rowsPerPage > 0 && rowsData
+                            ? rowsData?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            : rowsData
+                        )?.map((row) => (
+                            view === 'edit' && editItem?.order_id === row?.order_id ? (
+                                <EditPanel
+                                    row={row}
+                                    onBack={handleBackClick}
+                                    onSave={handleSaveClick}
+                                />
+                            ) : view === 'delete' && editItem?.order_id === row?.order_id ? (
+                                <DeletePanel
+                                    row={row}
+                                    onBack={handleBackClick}
+                                    onDelete={handleDeleteReq}
+                                />
+                            ) : (
+                                <TableRow key={row?.order_id}>
+                                    {row?.order_qty ? (
+                                        <>
+                                            <TableCell component="th" scope="row">
+                                                {row?.dish?.dish_name}
+                                            </TableCell>
+                                            <TableCell style={{ width: 160 }}>
+                                                {row?.employee?.name}
+                                            </TableCell>
+                                            <TableCell style={{ width: 160 }}>
+                                                {row?.order_qty}
+                                            </TableCell>
+                                        </>) : (
+                                        <>
+                                            <TableCell sx={{ textDecoration: 'line-through' }} component="th" scope="row">
+                                                {row?.dish?.dish_name}
+                                            </TableCell>
+                                            <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
+                                                {row?.employee?.name}
+                                            </TableCell>
+                                            <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
+                                                {row?.order_qty}
+                                            </TableCell>
+                                        </>
+                                    )}
+                                    <TableCell style={{ width: 160 }}>
+                                        {row?.order_status}
+                                    </TableCell>
+                                    {row?.order_qty ? (
+                                        <TableCell style={{ width: 160 }} align="right">
+                                            {convertDateTime(row?.created_at)}
+                                        </TableCell>) : (
+                                        <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }} align="right">
+                                            {convertDateTime(row?.created_at)}
+                                        </TableCell>)}
+                                    {/* <TableCell style={{ width: 160 }}>
                                     <IconButton
                                         aria-label="edit"
                                         color="primary"
@@ -277,39 +282,39 @@ export default function Page({ rows }: TableProps) {
                                         <DeleteIcon />
                                     </IconButton>
                                 </TableCell> */}
+                                </TableRow>
+                            )
+                        ))}
+                        {emptyRows > 0 && (
+                            <TableRow style={{ height: 53 * emptyRows }}>
+                                <TableCell colSpan={5} />
                             </TableRow>
-                        )
-                    ))}
-                    {emptyRows > 0 && (
-                        <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={5} />
-                        </TableRow>
-                    )}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TablePagination
-                            rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={5}
-                            count={rowsData?.length}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            slotProps={{
-                                select: {
-                                    inputProps: {
-                                        'aria-label': t('rows_per_page'),
+                        )}
+                    </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TablePagination
+                                rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+                                colSpan={5}
+                                count={rowsData?.length}
+                                rowsPerPage={rowsPerPage}
+                                page={page}
+                                slotProps={{
+                                    select: {
+                                        inputProps: {
+                                            'aria-label': t('rows_per_page'),
+                                        },
+                                        native: true,
                                     },
-                                    native: true,
-                                },
-                            }}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            ActionsComponent={TablePaginationActions}
-                        />
-                    </TableRow>
-                </TableFooter>
-            </Table>
-        </TableContainer>
+                                }}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                ActionsComponent={TablePaginationActions}
+                            />
+                        </TableRow>
+                    </TableFooter>
+                </Table>
+            </TableContainer>
         </>
     );
 }

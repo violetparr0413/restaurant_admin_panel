@@ -1,20 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import api, { getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { Order, ORDER_STATUS } from '@/utils/info';
+import { Order } from '@/utils/info';
 
 type ParamProps = {
   refresh: (datas: Order[]) => void;
 };
 
+const today = getCurrentDate();
+
 const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const { t } = useTranslation('common')
 
-  const today = getCurrentDate()
+  const ORDER_STATUS = {
+    "ORDERED": t('ordered'),
+    "BILLED": t('billed'),
+    "CANCELLED": t('cancelled'),
+    "INCART": t('incart')
+  }
 
   const [dish, setDish] = React.useState('');
   const [table, setTable] = React.useState('');
@@ -24,8 +31,10 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const [errorMessage, setErrorMessage] = React.useState('');
 
-  const handleSearch = () => {
+  const handleSearch = React.useCallback(() => {
     if (fromDate && toDate) {
+      setErrorMessage('');
+
       const formData = new FormData();
 
       dish && formData.append('dish', dish);
@@ -37,33 +46,29 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
       api.post('/search-order', formData)
         .then(res => refresh(res.data.orders))
         .catch(error => {
-          if (error.response && error.response.status === 422) {
-            // Validation error from server
+          if (error?.response?.status === 422) {
             console.log(error.response.data);
-            // setErrorMessage(error.response.data.message);
             setErrorMessage(t('something_went_wrong'));
           } else {
-            // Other errors
             console.error(t('unexpected_error'), error);
             setErrorMessage(t('something_went_wrong'));
           }
-        })
+        });
     } else if (!fromDate) {
       setErrorMessage(t('from_date_field_required'));
     } else if (!toDate) {
       setErrorMessage(t('to_date_field_required'));
     }
-  };
+  }, [dish, table, status, fromDate, toDate]); // <— include deps
 
-  useEffect(() => {
-    handleSearch()
+  React.useEffect(() => {
+    // run immediately
+    handleSearch();
 
-    const interval = setInterval(() => {
-      handleSearch(); // Refresh every 5 seconds
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+    // and poll every 5s with the *current* filters
+    const id = setInterval(handleSearch, 5000);
+    return () => clearInterval(id);
+  }, [handleSearch]);
 
   return (
     <Box sx={{ mb: 2, position: 'relative', border: '2px solid #1ba3e1', borderRadius: 1, p: 2, mt: 2 }}>

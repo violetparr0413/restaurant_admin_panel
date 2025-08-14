@@ -12,7 +12,7 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Dish, Order, Employee, ORDER_STATUS } from '@/utils/info';
+import { Dish, Order, Employee } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
@@ -35,6 +35,13 @@ type EditPanelProps = {
 const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
+
+    const ORDER_STATUS = {
+        "ORDERED": t('ordered'),
+        "BILLED": t('billed'),
+        "CANCELLED": t('cancelled'),
+        "INCART": t('incart')
+    }
 
     const [dish, setDish] = useState<number>(row?.dish_id);
 

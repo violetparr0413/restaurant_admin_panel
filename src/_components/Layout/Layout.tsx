@@ -19,6 +19,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
 import { Logout } from '@mui/icons-material';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
 const drawerWidth = 240;
 
@@ -115,11 +116,14 @@ export default function Layer(props: Props) {
                         {paths.find(path => path.url === router.pathname)?.label || ''}
                     </Typography>
                     {/* <IconButton aria-label="add" size="medium" sx={{ color: 'white', ml: 'auto' }} component={Link} onClick={() => { */}
-                    <IconButton aria-label="add" size="medium" sx={{ color: 'white', ml: 'auto' }}  onClick={() => {
-                        localStorage.removeItem('token');
-                        router.push('/auth/signin');
-                    }}><Logout fontSize="inherit" />
-                    </IconButton>
+                    <Box sx={{ color: 'white', ml: 'auto', display: 'flex', alignItems: 'center' }}>
+                        <LanguageSwitcher />
+                        <IconButton aria-label="add" size="medium" sx={{ color: 'white', ml: 'auto' }} onClick={() => {
+                            localStorage.removeItem('token');
+                            router.push('/auth/signin');
+                        }}><Logout fontSize="inherit" />
+                        </IconButton>
+                    </Box>
                 </Toolbar>
             </AppBar>
             <Box

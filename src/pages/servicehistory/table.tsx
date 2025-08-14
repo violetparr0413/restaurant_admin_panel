@@ -115,6 +115,11 @@ export default function Page({ rows }: TableProps) {
 
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
 
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
@@ -135,8 +140,8 @@ export default function Page({ rows }: TableProps) {
     };
 
     return (
-        <TableContainer component={Paper}>
-            <Table size="small" sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
+        <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+            <Table sx={{ tableLayout: 'fixed' }} size="small" stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
                         <StyledTableCell>{t('service')}</StyledTableCell>

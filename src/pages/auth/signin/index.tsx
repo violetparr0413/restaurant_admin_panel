@@ -1,9 +1,11 @@
 import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '@/utils/http_helper';
 import { useRouter } from 'next/router';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import PasswordInput from '@/_components/PasswordInput';
+import LanguageSwitcher from '@/_components/LanguageSwitcher/LanguageSwitcher';
 
 interface ILoginResponse {
   status: string;
@@ -26,6 +28,8 @@ export default function SignInPage() {
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const [LogoPath, setLogoPath] = useState('');
+
   const onHandleSignIn = async () => {
     try {
       const response: ILoginResponse = (await api.post('/login', {
@@ -36,7 +40,7 @@ export default function SignInPage() {
         localStorage.setItem('token', response.access_token!);
         router.push('/dashboard');
       } else {
-        setErrorMessage(t(`login.${response.message}`));
+        setErrorMessage(t(`login.invalid_credentials`));
       }
     } catch (err) {
       console.log(err);
@@ -44,14 +48,37 @@ export default function SignInPage() {
     }
   }
 
+  const refresh = useCallback(async () => {
+    api.get('/brand') // your server endpoint
+      .then(res => {
+        setLogoPath(res.data?.restaurant_logo)
+      })
+      .catch(error => {
+        if (error.response) {
+          console.error(t('unexpected_error'), error);
+          setErrorMessage(t('something_went_wrong'));
+        }
+      });
+  }, [t])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh]);
+
   return (
     <>
       <Box className="absolute top-0 lef-0 w-screen h-screen flex bg-cover bg-center p-4" sx={{ backgroundImage: 'url(/images/default-background.jpg)' }}>
-        <Paper elevation={20} className='m-auto border-3 p-4 rounded-2xl! w-sm text-center'>
+        <Paper
+          elevation={20}
+          className="relative m-auto border-3 p-4 rounded-2xl! w-sm text-center"
+        >
+          <Box className="absolute top-2 right-2 text-blue-400">
+            <LanguageSwitcher />
+          </Box>
           <Box
             className='mx-auto mb-4'
             component='img'
-            src={'/images/default-logo.png'}
+            src={LogoPath ? process.env.NEXT_PUBLIC_API_BASE_URL2 + LogoPath : ''}
             width={100}
           />
           <TextField
@@ -61,16 +88,11 @@ export default function SignInPage() {
             fullWidth
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            InputLabelProps={{
+              shrink: true, // keeps the label fixed at the top
+            }}
           />
-          <TextField
-            className='mb-2!'
-            type="password"
-            label={t('password')}
-            placeholder={t('login.enter_password')}
-            fullWidth
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <PasswordInput password={password} setPassword={setPassword} required={false} />
           <Typography variant='caption' className='text-rose-700 mb-4! text-left block'>{errorMessage}</Typography>
           <Button fullWidth onClick={onHandleSignIn}>{t('login')}</Button>
         </Paper>

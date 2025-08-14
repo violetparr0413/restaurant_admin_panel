@@ -17,6 +17,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BrandLogoUpload from './logo';
 import ImageBulkUploader from './background';
+import { useRouter } from 'next/router';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -38,11 +39,20 @@ const BrandConfigPage = () => {
     const [brandLogo, setBrandLogo] = useState<File | null>(null);
     const [bgImages, setBgImages] = useState<File[]>([]);
 
+    const [dish1, setDish1] = useState('');
+    const [dish2, setDish2] = useState('');
+    const [dish3, setDish3] = useState('');
+    const [dish4, setDish4] = useState('');
+    const [dish5, setDish5] = useState('');
+
     const [LogoPath, setLogoPath] = useState('');
     const [imagePaths, setImagePaths] = useState([]);
 
     const [errorMessage, setErrorMessage] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
+
+    const router = useRouter();
+    const { locale } = router;
 
     const refresh = useCallback(async () => {
         api.get('/brand') // your server endpoint
@@ -54,6 +64,36 @@ const BrandConfigPage = () => {
                     setScreenInterval(res.data?.screen_saver_after)
                     setDuration(res.data?.background_duration)
                     setImagePaths(JSON.parse(res.data?.restaurant_background))
+
+                    const dish_name1 = locale === 'en' ? res.data?.dish1_en :
+                        locale === 'zh' ? res.data?.dish1_zh :
+                            locale === 'ko' ? res.data?.dish1_ko :
+                                res.data?.dish1
+                    setDish1(dish_name1 ? dish_name1 : '')
+
+                    const dish_name2 = locale === 'en' ? res.data?.dish2_en :
+                        locale === 'zh' ? res.data?.dish2_zh :
+                            locale === 'ko' ? res.data?.dish2_ko :
+                                res.data?.dish2
+                    setDish2(dish_name2 ? dish_name2 : '')
+
+                    const dish_name3 = locale === 'en' ? res.data?.dish3_en :
+                        locale === 'zh' ? res.data?.dish3_zh :
+                            locale === 'ko' ? res.data?.dish3_ko :
+                                res.data?.dish3
+                    setDish3(dish_name3 ? dish_name3 : '')
+
+                    const dish_name4 = locale === 'en' ? res.data?.dish4_en :
+                        locale === 'zh' ? res.data?.dish4_zh :
+                            locale === 'ko' ? res.data?.dish4_ko :
+                                res.data?.dish4
+                    setDish4(dish_name4 ? dish_name4 : '')
+
+                    const dish_name5 = locale === 'en' ? res.data?.dish5_en :
+                        locale === 'zh' ? res.data?.dish5_zh :
+                            locale === 'ko' ? res.data?.dish5_ko :
+                                res.data?.dish5
+                    setDish5(dish_name5 ? dish_name5 : '')
                 }
             })
             .catch(error => {
@@ -66,7 +106,8 @@ const BrandConfigPage = () => {
 
     useEffect(() => {
         refresh()
-    }, [refresh]);
+        setInfoMessage('');
+    }, [refresh, locale]);
 
     if (!loaded) {
         return <div>{t('loading')}...</div>;
@@ -80,7 +121,41 @@ const BrandConfigPage = () => {
 
     const handleSave = () => {
         if (brandName && (duration > 0) && (screenInterval > 0)) {
+
+            if (dish1 || dish2 || dish3 || dish4 || dish5) {
+                if (!dish1 || !dish2 || !dish3 || !dish4 || !dish5) {
+                    setErrorMessage(t('popular_dishs_field_required'));
+                    setInfoMessage('');
+                    return
+                }
+            }
+
             const formData = new FormData();
+
+            locale === 'en' ? formData.append('dish1_en', dish1) :
+                locale === 'zh' ? formData.append('dish1_zh', dish1) :
+                    locale === 'ko' ? formData.append('dish1_ko', dish1) :
+                        formData.append('dish1', dish1);
+
+            locale === 'en' ? formData.append('dish2_en', dish2) :
+                locale === 'zh' ? formData.append('dish2_zh', dish2) :
+                    locale === 'ko' ? formData.append('dish2_ko', dish2) :
+                        formData.append('dish2', dish2);
+
+            locale === 'en' ? formData.append('dish3_en', dish3) :
+                locale === 'zh' ? formData.append('dish3_zh', dish3) :
+                    locale === 'ko' ? formData.append('dish3_ko', dish3) :
+                        formData.append('dish3', dish3);
+
+            locale === 'en' ? formData.append('dish4_en', dish4) :
+                locale === 'zh' ? formData.append('dish4_zh', dish4) :
+                    locale === 'ko' ? formData.append('dish4_ko', dish4) :
+                        formData.append('dish4', dish4);
+
+            locale === 'en' ? formData.append('dish5_en', dish5) :
+                locale === 'zh' ? formData.append('dish5_zh', dish5) :
+                    locale === 'ko' ? formData.append('dish5_ko', dish5) :
+                        formData.append('dish5', dish5);
 
             formData.append('restaurant_name', brandName);
             formData.append('background_duration', duration.toString());
@@ -181,6 +256,53 @@ const BrandConfigPage = () => {
                             </Grid>
                         </Grid>
 
+                    </Grid>
+                    <Grid size={12}>
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    label={t('popular_1')}
+                                    sx={{ mt: 2 }}
+                                    fullWidth
+                                    value={dish1}
+                                    onChange={(e) => setDish1(e.target.value)}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    label={t('popular_2')}
+                                    sx={{ mt: 2 }}
+                                    fullWidth
+                                    value={dish2}
+                                    onChange={(e) => setDish2(e.target.value)}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    label={t('popular_3')}
+                                    sx={{ mt: 2 }}
+                                    fullWidth
+                                    value={dish3}
+                                    onChange={(e) => setDish3(e.target.value)}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    label={t('popular_4')}
+                                    fullWidth
+                                    value={dish4}
+                                    onChange={(e) => setDish4(e.target.value)}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    label={t('popular_5')}
+                                    fullWidth
+                                    value={dish5}
+                                    onChange={(e) => setDish5(e.target.value)}
+                                />
+                            </Grid>
+                        </Grid>
                     </Grid>
 
                 </Grid>

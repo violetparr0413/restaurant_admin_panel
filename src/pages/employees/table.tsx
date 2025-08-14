@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LockResetIcon from '@mui/icons-material/LockReset';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 
 import { Employee } from '../../utils/info';
@@ -129,6 +130,12 @@ export default function Page({ rows, info, error }: TableProps) {
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Employee | null>(null);
 
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
+
     React.useEffect(() => {
         setRows(rows);
     }, [rows]);
@@ -152,6 +159,7 @@ export default function Page({ rows, info, error }: TableProps) {
     };
 
     const handleBackClick = () => {
+        info('')
         setView('hide');
         setEditItem(null);
     };
@@ -164,15 +172,18 @@ export default function Page({ rows, info, error }: TableProps) {
     };
 
     const handleAddClick = () => {
+        info('')
         setView('add');
     };
 
     const handleEditClick = (item: Employee) => {
+        info('')
         setEditItem(item);
         setView('edit');
     };
 
     const handleDeleteClick = (item: Employee) => {
+        info('')
         setEditItem(item);
         setView('delete');
     };
@@ -202,14 +213,35 @@ export default function Page({ rows, info, error }: TableProps) {
             })
     }
 
+    const handleLogoutClick = (item: Employee) => {
+        const form = new FormData();
+
+        form.append('employee_id', item?.employee_id.toString());
+        form.append('is_logged_in', '0');
+
+        api.post(`/change-logged-in`, form)
+            .then(res => {
+                rowsData?.find(x => x.employee_id === res.data.employee?.employee_id) ?
+                    setRows(rowsData => rowsData?.map(x => x.employee_id === res.data.employee?.employee_id ? res.data.employee : x))
+                    : setRows([...rowsData, res.data.employee])
+            })
+            .catch(error => {
+                if (error.response && error.response.status === 422) {
+                    console.log(error.response.data);
+                } else {
+                    console.error(t('unexpected_error'), error);
+                }
+            })
+    };
+
     return (
-        <TableContainer component={Paper}>
-            <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
+        <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+            <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell>{t('name')}</StyledTableCell>
-                        <StyledTableCell>{t('role')}</StyledTableCell>
-                        <StyledTableCell align="right">{t('created_at')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 480 }}>{t('name')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 200 }}>{t('role')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }}>
                             <IconButton aria-label="add"
                                 color="info"
@@ -270,6 +302,17 @@ export default function Page({ rows, info, error }: TableProps) {
                                     >
                                         <LockResetIcon />
                                     </IconButton>
+                                    {row?.is_logged_in && (
+                                        <IconButton
+                                            aria-label="logout"
+                                            color="warning"
+                                            onClick={() => handleLogoutClick(row)}
+                                            disabled={!row?.employee_id}
+                                            sx={{ mr: 1 }}
+                                        >
+                                            <LogoutIcon />
+                                        </IconButton>
+                                    )}
                                     <IconButton
                                         aria-label="delete"
                                         color="error"

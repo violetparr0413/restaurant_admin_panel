@@ -4,7 +4,6 @@ import { appWithTranslation } from 'next-i18next';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import createAppTheme from "@/theme/theme";
 import { useRouter } from "next/router";
-import LanguageSwitcher from "@/_components/LanguageSwitcher/LanguageSwitcher";
 import Layout from "@/_components/Layout/Layout";
 
 import { Dashboard, Person3, Category, Person, Checklist, BrandingWatermark, History, TableView, Print, Logout, Payment } from '@mui/icons-material';
@@ -13,6 +12,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import Head from "next/head";
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -116,16 +116,19 @@ function App({ Component, pageProps }: AppProps) {
     const router = useRouter();
     const excludedRoutes = ['/auth/signin'];
 
-    const isExcluded = excludedRoutes.includes(router.pathname);
+    const isExcluded = router.pathname.startsWith('/client') || excludedRoutes.includes(router.pathname);
 
     return (
         <ThemeProvider theme={theme}>
+            <Head>
+                <title>千里香</title>
+                <link rel="icon" href="/logo.ico" /> {/* Your logo or favicon */}
+            </Head>
             <CssBaseline />
             {isExcluded && <Component {...pageProps} />}
             {!isExcluded && <Layout sidebarItems={sidebarItems} paths={paths}>
                 <Component {...pageProps} />
             </Layout>}
-            <LanguageSwitcher />
         </ThemeProvider>
     );
 }

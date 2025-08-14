@@ -15,6 +15,7 @@ import IconButton from '@mui/material/IconButton';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import EditIcon from '@mui/icons-material/Edit';
+import LogoutIcon from '@mui/icons-material/Logout';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
@@ -134,6 +135,12 @@ export default function Page({ rows }: TableProps) {
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Employee | null>(null);
 
+    const [maxHeight, setMaxHeight] = React.useState(0)
+
+    React.useEffect(() => {
+        setMaxHeight(document.documentElement.clientHeight - 120);
+    }, []);
+
     React.useEffect(() => {
         setRows(rows);
     }, [rows]);
@@ -177,6 +184,27 @@ export default function Page({ rows }: TableProps) {
         setView('edit');
     };
 
+    const handleLogoutClick = (item: Employee) => {
+        const form = new FormData();
+
+        form.append('employee_id', item?.employee_id.toString());
+        form.append('is_logged_in', '0');
+
+        api.post(`/change-logged-in`, form)
+            .then(res => {
+                rowsData?.find(x => x.employee_id === res.data.employee?.employee_id) ?
+                    setRows(rowsData => rowsData?.map(x => x.employee_id === res.data.employee?.employee_id ? res.data.employee : x))
+                    : setRows([...rowsData, res.data.employee])
+            })
+            .catch(error => {
+                if (error.response && error.response.status === 422) {
+                    console.log(error.response.data);
+                } else {
+                    console.error(t('unexpected_error'), error);
+                }
+            })
+    };
+
     const handleDeleteClick = (item: Employee) => {
         setEditItem(item);
         setView('delete');
@@ -188,7 +216,7 @@ export default function Page({ rows }: TableProps) {
         setRows(rowsData?.filter(row => row !== data))
     }
 
-    const updateOrder = (row:Employee, order: number) => {
+    const updateOrder = async (row: Employee, order: number) => {
         const formData = new FormData();
 
         formData.append("_method", "put")
@@ -197,46 +225,109 @@ export default function Page({ rows }: TableProps) {
         formData.append('role', row?.role);
         formData.append('table_order', order.toString());
 
-        api.post(`/employee/${row?.employee_id}`, formData)
-            .then(res => { })
-            .catch(error => {
-                if (error.response && error.response.status === 422) {
-                    // Validation error from server
-                    console.log(error.response.data);
-                } else {
-                    // Other errors
-                    console.error(t('unexpected_error'), error);
-                }
-            })
+        try {
+            const res = await api.post(`/employee/${row?.employee_id}`, formData);
+            // handle success here
+        } catch (error) {
+            if (error.response && error.response.status === 422) {
+                // Validation error from server
+                console.log(error.response.data);
+            } else {
+                // Other errors
+                console.error(t('unexpected_error'), error);
+            }
+        }
     }
 
-    const handleOnDragEnd = (result: DropResult) => {
+    const increaseOrder = async (row: Employee) => {
+        const formData = new FormData();
+
+        formData.append("_method", "put")
+
+        formData.append('name', row?.name);
+        formData.append('role', row?.role);
+        formData.append('table_order', (row?.table_order + 1).toString());
+
+        try {
+            const res = await api.post(`/employee/${row?.employee_id}`, formData);
+            // handle success here
+        } catch (error) {
+            if (error.response && error.response.status === 422) {
+                // Validation error from server
+                console.log(error.response.data);
+            } else {
+                // Other errors
+                console.error(t('unexpected_error'), error);
+            }
+        }
+    }
+
+    const decreaseOrder = async (row: Employee) => {
+        const formData = new FormData();
+
+        formData.append("_method", "put")
+
+        formData.append('name', row?.name);
+        formData.append('role', row?.role);
+        formData.append('table_order', (row?.table_order - 1).toString());
+
+        try {
+            const res = await api.post(`/employee/${row?.employee_id}`, formData);
+            // handle success here
+        } catch (error) {
+            if (error.response && error.response.status === 422) {
+                // Validation error from server
+                console.log(error.response.data);
+            } else {
+                // Other errors
+                console.error(t('unexpected_error'), error);
+            }
+        }
+    }
+
+    const handleOnDragEnd = async (result: DropResult) => {
         if (!result.destination) return;
 
         const items = Array.from(rowsData);
 
         const source_index = result.source.index + rowsPerPage * page
         const destination_index = result.destination.index + rowsPerPage * page
-        
-        updateOrder(items[destination_index], items[source_index].table_order)
-        updateOrder(items[source_index], items[destination_index].table_order)
 
-        const [reorderedItem] = items.splice(source_index, 1);
-        items.splice(destination_index, 0, reorderedItem);
+        await updateOrder(items[source_index], items[destination_index].table_order)
 
-        setRows(items);
+        if (destination_index > source_index) {
+            for (let i = source_index + 1; i <= destination_index; i++) { await decreaseOrder(items[i]) }
+        } else {
+            for (let i = destination_index; i < source_index; i++) {
+                await increaseOrder(items[i])
+            }
+        }
+
+        // const [reorderedItem] = items.splice(source_index, 1);
+        // items.splice(destination_index, 0, reorderedItem);
+
+        // console.log(items)
+        // setRows(items);
+
+        api.get('/get-table') // your server endpoint
+            .then(res => setRows(res.data))
+            .catch(error => {
+                if (error.response) {
+                    console.error(t('unexpected_error'), error);
+                }
+            });
     };
 
     return (
         <DragDropContext onDragEnd={handleOnDragEnd}>
-            <TableContainer component={Paper}>
-                <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
+            <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
+                <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
                             <StyledTableCell sx={{ width: 50 }}></StyledTableCell>
-                            <StyledTableCell>{t('name')}</StyledTableCell>
-                            <StyledTableCell align="right">{t('created_at')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 160 }}>
+                            <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }} align="right">{t('created_at')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 200 }}>
                                 <IconButton aria-label="add"
                                     color="info"
                                     onClick={handleAddClick}
@@ -306,6 +397,17 @@ export default function Page({ rows }: TableProps) {
                                                         >
                                                             <EditIcon />
                                                         </IconButton>
+                                                        {row?.is_logged_in && (
+                                                            <IconButton
+                                                                aria-label="logout"
+                                                                color="warning"
+                                                                onClick={() => handleLogoutClick(row)}
+                                                                disabled={!row?.employee_id}
+                                                                sx={{ mr: 1 }}
+                                                            >
+                                                                <LogoutIcon />
+                                                            </IconButton>
+                                                        )}
                                                         <IconButton
                                                             aria-label="delete"
                                                             color="error"

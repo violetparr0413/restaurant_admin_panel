@@ -12,11 +12,12 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { User, USER_ROLE } from '@/utils/info';
+import { User } from '@/utils/info';
 import api from '@/utils/http_helper';
 import Box from '@mui/material/Box';
 
 import { useTranslation } from 'next-i18next';
+import PasswordInput from '@/_components/PasswordInput';
 
 type AddPanelProps = {
     onBack: () => void;
@@ -26,6 +27,12 @@ type AddPanelProps = {
 const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
 
     const { t } = useTranslation('common')
+
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
 
     const [name, setName] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -77,16 +84,11 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder={t('name')}
+                            required
                             fullWidth
                             label={t('name')}
                         />
-                        <TextField
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('password')}
-                            fullWidth
-                            label={t('password')}
-                        />
+                        <PasswordInput password={password} setPassword={setPassword} required={true} />
                     </Box>
                 </TableCell>
                 <TableCell>

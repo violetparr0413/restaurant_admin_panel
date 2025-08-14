@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: [new URL(process.env.NEXT_PUBLIC_API_BASE_URL2!).hostname],
+  },
 };
 
 export default nextConfig;

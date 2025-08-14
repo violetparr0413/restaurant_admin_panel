@@ -6,23 +6,16 @@ import {
     Select,
     MenuItem,
     Alert,
+    Box,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Employee, USER_ROLE } from '@/utils/info';
+import { Employee } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import PasswordInput from '@/_components/PasswordInput';
 
 type EditPanelProps = {
     row: Employee;
@@ -34,7 +27,14 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     const [name, setName] = useState<string>(row?.name);
+    const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>(row?.role);
 
     const [errorMessage, setErrorMessage] = useState('');
@@ -46,6 +46,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
             formData.append("_method", "put")
 
             formData.append('name', name);
+            password && formData.append('password', password);
             formData.append('role', role);
 
             api.post(`/employee/${row?.employee_id}`, formData)
@@ -78,13 +79,17 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                 </TableRow>}
             <TableRow>
                 <TableCell>
-                    <TextField
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={t('name')}
-                        size="small"
-                        label={t('name')}
-                    />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder={t('name')}
+                            fullWidth
+                            required
+                            label={t('name')}
+                        />
+                        <PasswordInput password={password} setPassword={setPassword} required={true} />
+                    </Box>
                 </TableCell>
                 <TableCell>
                     <Select

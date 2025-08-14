@@ -12,11 +12,12 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { User, USER_ROLE } from '@/utils/info';
+import { User } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 import Box from '@mui/material/Box';
 
 import { useTranslation } from 'next-i18next';
+import PasswordInput from '@/_components/PasswordInput';
 
 type EditPanelProps = {
     row: User;
@@ -28,6 +29,12 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     const [name, setName] = useState<string>(row?.username);
     const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>(row?.user_role);
@@ -35,13 +42,13 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleSave = () => {
-        if (name && role && password) {
+        if (name && role) {
             const formData = new FormData();
 
             formData.append("_method", "put")
 
             formData.append('username', name);
-            formData.append('password', password);
+            password && formData.append('password', password);
             formData.append('user_role', role);
 
             api.post(`/users/${row?.user_id}`, formData)
@@ -83,13 +90,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                             fullWidth
                             label={t('name')}
                         />
-                        <TextField
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('password')}
-                            fullWidth
-                            label={t('password')}
-                        />
+                        <PasswordInput password={password} setPassword={setPassword} required={true} />
                     </Box>
                 </TableCell>
                 <TableCell>

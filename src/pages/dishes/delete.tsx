@@ -30,6 +30,14 @@ type DeletePanelProps = {
 const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     const { t } = useTranslation('common')
+
+    const DISH_STATUS = [
+        '---',
+        t('takeout'),
+        t('popular'),
+        t('extra'),
+    ];
+    
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleDelete = () => {
@@ -52,13 +60,31 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
     return (
         <>
             {errorMessage && (<TableRow>
-                <TableCell colSpan={5} sx={{ border: 0 }}>
+                <TableCell colSpan={7} sx={{ border: 0 }}>
                     <Alert severity="error">{errorMessage}</Alert>
                 </TableCell>
             </TableRow>)}
             <TableRow key={row?.dish_id}>
                 <TableCell component="th" scope="row">
-                    {row?.category.category_name}
+                    {row?.category.parent ? (
+                        locale === 'en' ? row?.category.parent?.category_en_name :
+                            locale === 'zh' ? row?.category.parent?.category_zh_name :
+                                locale === 'ko' ? row?.category.parent?.category_ko_name :
+                                    row?.category.parent?.category_name
+                    ) : (
+                        locale === 'en' ? row?.category.category_en_name :
+                            locale === 'zh' ? row?.category.category_zh_name :
+                                locale === 'ko' ? row?.category.category_ko_name :
+                                    row?.category.category_name
+                    )}
+                </TableCell>
+                <TableCell>
+                    {row?.category.parent ? (
+                        locale === 'en' ? row?.category.category_en_name :
+                            locale === 'zh' ? row?.category.category_zh_name :
+                                locale === 'ko' ? row?.category.category_ko_name :
+                                    row?.category.category_name
+                    ) : ('---')}
                 </TableCell>
                 <TableCell>
                     {locale === 'en' ? row?.dish_en_name :
@@ -80,6 +106,9 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     </Avatar>) : (<Avatar sx={{ bgcolor: deepOrange[500], width: 32, height: 32 }}>
                         <CancelOutlined />
                     </Avatar>)}
+                </TableCell>
+                <TableCell align="right">
+                    {DISH_STATUS[row?.dish_status]}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

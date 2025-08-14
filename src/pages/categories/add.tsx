@@ -46,7 +46,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
     }, [locale]);
 
     const handleSave = () => {
-        if ((name) && image) {
+        if (name) {
             const formData = new FormData();
 
             locale === 'en' ? formData.append('category_en_name', name) :
@@ -56,7 +56,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
 
             (locale !== 'ja') && formData.append('category_name', name);
 
-            formData.append('category_image', image);
+            image && formData.append('category_image', image);
             parent && formData.append('parent_id', parent.toString());
 
             uploader.post('/category', formData)
@@ -75,8 +75,6 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
                 })
         } else if (!name) {
             setErrorMessage(t('name_field_required'));
-        } else if (!image) {
-            setErrorMessage(t('image_field_required'));
         }
     };
 
