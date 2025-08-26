@@ -13,15 +13,6 @@ import { Order } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type DeletePanelProps = {
     row: Order;
@@ -33,6 +24,13 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     const { t } = useTranslation('common')
     const [errorMessage, setErrorMessage] = useState('');
+
+    const ORDER_STATUS = {
+        "ORDERED": t('ordered'),
+        "BILLED": t('billed'),
+        "CANCELLED": t('cancelled'),
+        "INCART": t('incart')
+    }
 
     const handleDelete = () => {
         api.delete(`/order/${row?.order_id}`)
@@ -62,7 +60,7 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     {row?.order_qty}
                 </TableCell>
                 <TableCell style={{ width: 160 }}>
-                    {row?.order_status}
+                    {ORDER_STATUS[row?.order_status]}
                 </TableCell>
                 <TableCell style={{ width: 160 }} align="right">
                     {convertDateTime(row?.created_at)}

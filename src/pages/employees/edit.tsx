@@ -7,6 +7,9 @@ import {
     MenuItem,
     Alert,
     Box,
+    FormControl,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import IconButton from '@mui/material/IconButton';
@@ -36,6 +39,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const [name, setName] = useState<string>(row?.name);
     const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>(row?.role);
+    const [allowPurchase, setAllowPurchase] = useState<boolean>(row?.purchase_allow ? true : false);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -48,6 +52,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
             formData.append('name', name);
             password && formData.append('password', password);
             formData.append('role', role);
+            (allowPurchase !== null) && formData.append('purchase_allow', allowPurchase ? '1' : '0');
 
             api.post(`/employee/${row?.employee_id}`, formData)
                 .then(res => onSave(res.data))
@@ -104,6 +109,19 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                             <MenuItem value={key}>{value}</MenuItem>
                         ))}
                     </Select>
+                </TableCell>
+                <TableCell>
+                    {role === 'COUNTER' && (
+                        <FormControl component="fieldset" variant="standard">
+                            <FormControlLabel
+                                control={
+                                    <Switch checked={allowPurchase} onChange={(e) => setAllowPurchase(e.target.checked)} name="gilad" />
+                                }
+                                sx={{ mt: 1, ml: 1 }}
+                                label={t('allow_purchase')}
+                            />
+                        </FormControl>
+                    )}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

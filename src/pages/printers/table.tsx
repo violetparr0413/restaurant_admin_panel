@@ -25,16 +25,7 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -56,10 +47,17 @@ export default function Page({ rows }: TableProps) {
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Printer | null>(null);
+    const [counterExist, setCounterExist] = React.useState(false)
 
     React.useEffect(() => {
+        if (rows.findIndex(x => x.position == 'COUNTER') > -1) setCounterExist(true)
         setRows(rows);
     }, [rows]);
+
+    const PRINTER_POSITION = {
+        'COUNTER': t('counter'),
+        "KITCHEN": t('kitchen'),
+    }
 
     const handleBackClick = () => {
         setView('hide');
@@ -98,29 +96,29 @@ export default function Page({ rows }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} aria-label="custom pagination table">
                 <TableHead>
                     <TableRow>
+                        <StyledTableCell>{t('name')}</StyledTableCell>
                         <StyledTableCell>{t('ip_address')}</StyledTableCell>
                         <StyledTableCell>{t('port')}</StyledTableCell>
                         <StyledTableCell>{t('position')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>
-                            {(rowsData?.length < 2) && (
-                                <IconButton aria-label="add"
-                                    color="info"
-                                    onClick={handleAddClick}
-                                >
-                                    <PostAddIcon />
-                                </IconButton>
-                            )}
+                            <IconButton aria-label="add"
+                                color="info"
+                                onClick={handleAddClick}
+                            >
+                                <PostAddIcon />
+                            </IconButton>
                         </StyledTableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {view === 'add' && (rowsData?.length < 2) && (
-                        <AddPanel onBack={handleBackClick} onSave={handleSaveClick} />
+                    {view === 'add' && (
+                        <AddPanel exist={counterExist} onBack={handleBackClick} onSave={handleSaveClick} />
                     )}
                     {rowsData?.map((row) => (
                         view === 'edit' && editItem?.printer_id === row?.printer_id ? (
                             <EditPanel
+                                exist={counterExist}
                                 row={row}
                                 onBack={handleBackClick}
                                 onSave={handleSaveClick}
@@ -134,13 +132,16 @@ export default function Page({ rows }: TableProps) {
                         ) : (
                             <TableRow key={row?.printer_id}>
                                 <TableCell component="th" scope="row">
+                                    {row?.printer_name}
+                                </TableCell>
+                                <TableCell>
                                     {row?.ip_address}
                                 </TableCell>
                                 <TableCell>
                                     {row?.port}
                                 </TableCell>
                                 <TableCell>
-                                    {row?.position}
+                                    {PRINTER_POSITION[row?.position]}
                                 </TableCell>
                                 <TableCell style={{ width: 160 }} align="right">
                                     {convertDateTime(row?.created_at)}

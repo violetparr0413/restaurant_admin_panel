@@ -13,15 +13,6 @@ import { Printer } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type DeletePanelProps = {
     row: Printer;
@@ -32,6 +23,11 @@ type DeletePanelProps = {
 const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     const { t } = useTranslation('common')
+
+    const PRINTER_POSITION = {
+        'COUNTER': t('counter'),
+        "KITCHEN": t('kitchen'),  
+    }
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -53,13 +49,16 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
             )}
             <TableRow key={row?.printer_id}>
                 <TableCell>
+                    {row?.printer_name}
+                </TableCell>
+                <TableCell>
                     {row?.ip_address}
                 </TableCell>
                 <TableCell>
                     {row?.port}
                 </TableCell>
                 <TableCell>
-                    {row?.position}
+                    {PRINTER_POSITION[row?.position]}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import {
     Alert,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
     TableCell,
     TableRow,
     TextField,
@@ -9,11 +13,12 @@ import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
 import { convertDateTime, uploader } from '@/utils/http_helper';
-import { Category } from '../../utils/info';
+import { Category, Printer, TaxRate } from '../../utils/info';
 
 import { useTranslation } from 'next-i18next';
 import ImageUploader from '@/_components/ImageUploader';
 import { useRouter } from 'next/router';
+import PrinterMultiSelect from '@/_components/PrinterMultiSelect';
 
 type EditPanelProps = {
     row: Category;
@@ -27,13 +32,48 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
     const [name, setName] = useState<string>(row?.category_name);
     const [image, setImage] = useState<File | null>(null);
+    const [taxRateId, setTaxRateId] = useState<number>(row?.tax_rate_id || 0);
+    const [printerIds, setPrinterIds] = useState<number[]>(row?.printers?.map(x => x.printer_id) || []);
+
+    const [taxRates, setTaxRates] = useState<TaxRate[] | null>(null);
+    const [printers, setPrinters] = useState<Printer[] | null>(null);
 
     const [errorMessage, setErrorMessage] = useState('');
 
     const router = useRouter();
     const { locale } = router;
 
+    const getTaxRates = () => {
+        uploader.get('/tax-rate') // your server endpoint
+            .then(res => {
+                setTaxRates(res.data)
+            })
+            .catch(error => {
+                if (error.response) {
+                    console.error(t('unexpected_error'), error);
+                    setErrorMessage(t('something_went_wrong'));
+                }
+            });
+    }
+
+    const getPrinters = () => {
+        uploader.get('/printer') // your server endpoint
+            .then(res => {
+                setPrinters(res.data.filter(x => x.position !== 'COUNTER'))
+            })
+            .catch(error => {
+                if (error.response) {
+                    console.error(t('unexpected_error'), error);
+                    setErrorMessage(t('something_went_wrong'));
+                }
+            });
+    }
+
     React.useEffect(() => {
+        if (!row?.parent_id) {
+            getTaxRates()
+        }
+        getPrinters()
         const name = locale === 'en' ? row?.category_en_name :
             locale === 'zh' ? row?.category_zh_name :
                 locale === 'ko' ? row?.category_ko_name :
@@ -54,6 +94,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
             image && formData.append('category_image', image);
             formData.append('category_order', row?.category_order.toString());
+            !row?.parent_id && taxRateId && formData.append('tax_rate_id', taxRateId.toString());
+            printerIds && formData.append('printer_ids', JSON.stringify(printerIds));
             row?.parent_id && formData.append('parent_id', row?.parent_id.toString());
 
             uploader.post(`/category/${row?.category_id}`, formData)
@@ -79,7 +121,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={5} sx={{ border: 0 }}>
+                    <TableCell colSpan={7} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
@@ -99,6 +141,37 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         setImage(target.files[0]);
                     }
                 }} imageFile={image} imageFilePath={row?.category_image} />
+            </TableCell>
+            {!row?.parent_id && (
+                <TableCell>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel>{t('tax_rates')}</InputLabel>
+                        <Select
+                            required
+                            value={taxRateId}
+                            onChange={(e) => {
+                                setTaxRateId(Number(e.target.value))
+                            }}
+                            label={t('tax_rates')}
+                        >
+                            <MenuItem value={0} disabled>{t('select')}</MenuItem>
+                            {taxRates?.map((x) => (
+                                <MenuItem value={x.tax_rate_id} key={x.tax_rate_id}>
+                                    {x.tax_rate_name} ({x.tax_rate_value}%)
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </TableCell>
+            )}
+            <TableCell>
+                <PrinterMultiSelect
+                    printers={printers}
+                    value={printerIds}
+                    onChange={setPrinterIds}
+                    label={t('printer')}
+                    placeholder={t('select')}
+                />
             </TableCell>
             <TableCell align="right">
                 {convertDateTime(row?.created_at)}

@@ -14,6 +14,7 @@ export interface Employee {
     table_order: number;
     is_logged_in: boolean;
     created_at: string;
+    purchase_allow: number;
 }
 
 export interface Category {
@@ -23,6 +24,10 @@ export interface Category {
     category_zh_name: string;
     category_ko_name: string;
     parent_id: number;
+    tax_rate_id: number;
+    printer_id: number;
+    printers: Printer[];
+    tax_rate?: TaxRate;
     parent?: Category;
     category_image: string;
     category_order: number;
@@ -47,11 +52,23 @@ export interface Dish {
     dish_en_unit: string;
     dish_zh_unit: string;
     dish_ko_unit: string;
+    youtube_url: string;
     dish_price: number;
     dish_status: number;
     tax_price: number;
+    printers: Printer[];
     dish_available: number;
     created_at: string;
+    ingredients: Ingredient[];
+}
+
+export interface Ingredient {
+    dish_ingredient_id: number;
+    dish_id: number;
+    inventory_id: number;
+    quantity: number;
+    created_at: string
+    inventory: Inventory;
 }
 
 export interface Service {
@@ -63,14 +80,32 @@ export interface Service {
     created_at: string;
 }
 
+export interface Guest {
+    guest_id: number;
+    employee_id: number;
+    employee: Employee;
+    num_of_people: number;
+    payment_method_id: number;
+    created_at: string;
+    end_at?: string | null;
+    deleted_at?: string | null;
+    payment_method?: PaymentMethod;
+    is_printed: boolean;
+    is_printed_receipt: boolean;
+    order: Order[];
+}
+
 export interface Order {
     order_id: number;
     dish_id: number;
     dish: Dish;
+    guest_id: number;
+    guest: Guest;
     table_number: number;
     employee: Employee;
     order_qty: number;
     order_status: string;
+    is_printed: number;
     created_at: string;
 }
 
@@ -118,6 +153,7 @@ export interface ServiceHistory {
 
 export interface Printer {
     printer_id: number;
+    printer_name: string;
     ip_address: string;
     port: string;
     position: string;
@@ -127,6 +163,13 @@ export interface Printer {
 export interface PaymentMethod {
     payment_method_id: number;
     payment_method_name: string;
+    created_at: string;
+}
+
+export interface TaxRate {
+    tax_rate_id: number;
+    tax_rate_name: string;
+    tax_rate_value: number;
     created_at: string;
 }
 
@@ -148,4 +191,49 @@ export interface Statistics {
     paidTotal: number;
     paymentOrders?: PaymentOrder[];
     unpaidTotal: number;
+}
+
+export interface InvoiceLog {
+    guest: Guest;
+    numOfDishes: number;
+    payment_method?: PaymentMethod;
+    table: Employee;
+    totalPriceOrder: number
+    totalTaxPrice: number
+}
+
+export interface InventoryUnit {
+    unit_id: number;
+    unit_name: string;
+    created_at: string;
+}
+
+export interface Supplier {
+    supplier_id: number;
+    supplier_name: string;
+    phone: string;
+    fax: string;
+    email: string;
+    note: string;
+    created_at: string;
+}
+
+export interface Inventory {
+    inventory_id: number;
+    name: string;
+    current_stock: number;
+    unit_id: number;
+    unit: InventoryUnit;
+    created_at: string;
+}
+
+export interface ReportInventory {
+    inventory: Inventory;
+    openStock: number;
+    purchasedQty: number;
+    salesConsumption: number;
+    theoreticalBalance: number;
+    actualStock: number;
+    difference: number;
+    remark: string;
 }

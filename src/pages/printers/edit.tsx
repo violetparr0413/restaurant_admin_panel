@@ -18,12 +18,13 @@ import api from '@/utils/http_helper';
 import { useTranslation } from 'next-i18next';
 
 type EditPanelProps = {
+    exist: boolean,
     row: Printer,
     onBack: () => void;
     onSave: (data: Printer) => void;
 };
 
-const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
+const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
@@ -32,6 +33,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         "KITCHEN": t('kitchen'),  
     }
 
+    const [name, setName] = useState<string>(row?.printer_name);
     const [ipAddress, setIpAddress] = useState<string>(row?.ip_address);
     const [port, setPort] = useState<string>(row?.port);
     const [position, setPosition] = useState<string>(row?.position);
@@ -39,11 +41,12 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleSave = () => {
-        if (ipAddress && port && position) {
+        if (name && ipAddress && port && position) {
             const formData = new FormData();
 
             formData.append("_method", "put")
 
+            formData.append('printer_name', name);
             formData.append('ip_address', ipAddress);
             formData.append('port', port);
             formData.append('position', position);
@@ -68,6 +71,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
             setErrorMessage(t('port_field_required'));
         } else if (!position) {
             setErrorMessage(t('position_field_required'));
+        } else if (!name) {
+            setErrorMessage(t('name_field_required'));
         }
     };
 
@@ -80,6 +85,15 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
+                <TableCell>
+                    <TextField
+                        fullWidth
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={t('name')}
+                        label={t('name')}
+                    />
+                </TableCell>
                 <TableCell>
                     <TextField
                         fullWidth
@@ -108,7 +122,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         >
                             <MenuItem value="" disabled>{t('select')}</MenuItem>
                             {Object.entries(PRINTER_POSITION)?.map(([key, value]) => (
-                                <MenuItem value={key}>{value}</MenuItem>
+                                <MenuItem value={key} disabled={exist ? position === 'COUNTER' ? false : key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>

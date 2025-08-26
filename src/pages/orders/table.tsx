@@ -14,9 +14,8 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 
 import { Order } from '../../utils/info';
@@ -25,16 +24,8 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { useRouter } from 'next/router';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -126,6 +117,9 @@ export default function Page({ rows }: TableProps) {
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
     const [editItem, setEditItem] = React.useState<Order | null>(null);
 
+    const router = useRouter();
+    const { locale } = router;
+
     const [maxHeight, setMaxHeight] = React.useState(0)
 
     React.useEffect(() => {
@@ -135,6 +129,13 @@ export default function Page({ rows }: TableProps) {
     React.useEffect(() => {
         setRows(rows);
     }, [rows]);
+
+    const ORDER_STATUS = {
+        "ORDERED": t('ordered'),
+        "BILLED": t('billed'),
+        "CANCELLED": t('cancelled'),
+        "INCART": t('incart')
+    }
 
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
@@ -192,10 +193,12 @@ export default function Page({ rows }: TableProps) {
                 <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
-                            <StyledTableCell>{t('dish')}</StyledTableCell>
-                            <StyledTableCell>{t('table')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 160 }}>{t('order_quantity')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 160 }}>{t('order_status')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 200 }}>{t('dish')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }}>{t('table')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 200 }} align="right">{t('payment_method')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }} align="right">{t('order_quantity')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }} align="right">{t('order_status')}</StyledTableCell>
+                            {/* <StyledTableCell sx={{ width: 160 }} align="right">{t('is_printed')}</StyledTableCell> */}
                             <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
                             {/* <StyledTableCell sx={{ width: 160 }}>
                             <IconButton aria-label="add"
@@ -232,38 +235,57 @@ export default function Page({ rows }: TableProps) {
                                     {row?.order_qty ? (
                                         <>
                                             <TableCell component="th" scope="row">
-                                                {row?.dish?.dish_name}
+                                                {locale === 'en' ? row?.dish?.dish_en_name :
+                                                    locale === 'zh' ? row?.dish?.dish_zh_name :
+                                                        locale === 'ko' ? row?.dish?.dish_ko_name :
+                                                            row?.dish?.dish_name}
                                             </TableCell>
-                                            <TableCell style={{ width: 160 }}>
+                                            <TableCell>
                                                 {row?.employee?.name}
                                             </TableCell>
-                                            <TableCell style={{ width: 160 }}>
+                                            <TableCell align="right">
+                                                {row?.guest?.payment_method?.payment_method_name}
+                                            </TableCell>
+                                            <TableCell align="right">
                                                 {row?.order_qty}
                                             </TableCell>
                                         </>) : (
                                         <>
                                             <TableCell sx={{ textDecoration: 'line-through' }} component="th" scope="row">
-                                                {row?.dish?.dish_name}
+                                                {locale === 'en' ? row?.dish?.dish_en_name :
+                                                    locale === 'zh' ? row?.dish?.dish_zh_name :
+                                                        locale === 'ko' ? row?.dish?.dish_ko_name :
+                                                            row?.dish?.dish_name}
                                             </TableCell>
-                                            <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
+                                            <TableCell sx={{ textDecoration: 'line-through' }}>
                                                 {row?.employee?.name}
                                             </TableCell>
-                                            <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }}>
+                                            <TableCell align="right" sx={{ textDecoration: 'line-through' }}>
+                                                {row?.guest?.payment_method?.payment_method_name}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ textDecoration: 'line-through' }}>
                                                 {row?.order_qty}
                                             </TableCell>
                                         </>
                                     )}
-                                    <TableCell style={{ width: 160 }}>
-                                        {row?.order_status}
+                                    <TableCell align="right">
+                                        {ORDER_STATUS[row?.order_status]}
                                     </TableCell>
+                                    {/* <TableCell align="right">
+                                        {row?.is_printed ? (
+                                            <CheckIcon color="success" fontSize="small" />
+                                        ) : (
+                                            <CloseIcon color="error" fontSize="small" />
+                                        )}
+                                    </TableCell> */}
                                     {row?.order_qty ? (
-                                        <TableCell style={{ width: 160 }} align="right">
+                                        <TableCell align="right">
                                             {convertDateTime(row?.created_at)}
                                         </TableCell>) : (
-                                        <TableCell sx={{ textDecoration: 'line-through' }} style={{ width: 160 }} align="right">
+                                        <TableCell sx={{ textDecoration: 'line-through' }} align="right">
                                             {convertDateTime(row?.created_at)}
                                         </TableCell>)}
-                                    {/* <TableCell style={{ width: 160 }}>
+                                    {/* <TableCell>
                                     <IconButton
                                         aria-label="edit"
                                         color="primary"
@@ -287,7 +309,7 @@ export default function Page({ rows }: TableProps) {
                         ))}
                         {emptyRows > 0 && (
                             <TableRow style={{ height: 53 * emptyRows }}>
-                                <TableCell colSpan={5} />
+                                <TableCell colSpan={6} />
                             </TableRow>
                         )}
                     </TableBody>
@@ -295,7 +317,7 @@ export default function Page({ rows }: TableProps) {
                         <TableRow>
                             <TablePagination
                                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                colSpan={5}
+                                colSpan={6}
                                 count={rowsData?.length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}

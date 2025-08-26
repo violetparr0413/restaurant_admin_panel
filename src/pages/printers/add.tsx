@@ -18,19 +18,21 @@ import api from '@/utils/http_helper';
 import { useTranslation } from 'next-i18next';
 
 type AddPanelProps = {
+    exist: boolean;
     onBack: () => void;
     onSave: (data: Printer) => void;
 };
 
-const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
+const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
     const PRINTER_POSITION = {
         'COUNTER': t('counter'),
-        "KITCHEN": t('kitchen'),  
+        "KITCHEN": t('kitchen'),
     }
 
+    const [name, setName] = useState<string>('');
     const [ipAddress, setIpAddress] = useState<string>('');
     const [port, setPort] = useState<string>('');
     const [position, setPosition] = useState<string>('');
@@ -38,9 +40,10 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleSave = () => {
-        if (ipAddress && port && position) {
+        if (name && ipAddress && port && position) {
             const formData = new FormData();
 
+            formData.append('printer_name', name);
             formData.append('ip_address', ipAddress);
             formData.append('port', port);
             formData.append('position', position);
@@ -59,6 +62,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         setErrorMessage(t('something_went_wrong'));
                     }
                 })
+        } else if (!name) {
+            setErrorMessage(t('name_field_required'));
         } else if (!ipAddress) {
             setErrorMessage(t('ipaddress_field_required'));
         } else if (!port) {
@@ -77,6 +82,15 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
+                <TableCell>
+                    <TextField
+                        fullWidth
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={t('name')}
+                        label={t('name')}
+                    />
+                </TableCell>
                 <TableCell>
                     <TextField
                         fullWidth
@@ -105,7 +119,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         >
                             <MenuItem value="" disabled>{t('select')}</MenuItem>
                             {Object.entries(PRINTER_POSITION)?.map(([key, value]) => (
-                                <MenuItem value={key}>{value}</MenuItem>
+                                <MenuItem value={key} disabled={exist ? key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>

@@ -4,25 +4,21 @@ import {
     TableCell,
     TextField,
     Alert,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
 import { uploader } from '@/utils/http_helper';
-import { Category } from '@/utils/info';
+import { Category, Printer, TaxRate } from '@/utils/info';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import ImageUploader from '@/_components/ImageUploader';
 import { useRouter } from 'next/router';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import PrinterMultiSelect from '@/_components/PrinterMultiSelect';
 
 type AddPanelProps = {
     parent: number,
@@ -36,13 +32,48 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
 
     const [name, setName] = useState<string>('');
     const [image, setImage] = useState<File | null>(null);
+    const [taxRateId, setTaxRateId] = useState<number>(0);
+    const [printerIds, setPrinterIds] = useState<number[]>([]);
+
+    const [taxRates, setTaxRates] = useState<TaxRate[] | null>(null);
+    const [printers, setPrinters] = useState<Printer[] | null>(null);
 
     const [errorMessage, setErrorMessage] = useState('');
 
     const router = useRouter();
     const { locale } = router;
 
+    const getTaxRates = () => {
+        uploader.get('/tax-rate') // your server endpoint
+            .then(res => {
+                setTaxRates(res.data)
+            })
+            .catch(error => {
+                if (error.response) {
+                    console.error(t('unexpected_error'), error);
+                    setErrorMessage(t('something_went_wrong'));
+                }
+            });
+    }
+
+    const getPrinters = () => {
+        uploader.get('/printer') // your server endpoint
+            .then(res => {
+                setPrinters(res.data.filter(x => x.position !== 'COUNTER'))
+            })
+            .catch(error => {
+                if (error.response) {
+                    console.error(t('unexpected_error'), error);
+                    setErrorMessage(t('something_went_wrong'));
+                }
+            });
+    }
+
     React.useEffect(() => {
+        if (!parent) {
+            getTaxRates()
+        }
+        getPrinters()
     }, [locale]);
 
     const handleSave = () => {
@@ -57,6 +88,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
             (locale !== 'ja') && formData.append('category_name', name);
 
             image && formData.append('category_image', image);
+            !parent && taxRateId && formData.append('tax_rate_id', taxRateId.toString());
+            printerIds && formData.append('printer_ids', JSON.stringify(printerIds));
             parent && formData.append('parent_id', parent.toString());
 
             uploader.post('/category', formData)
@@ -82,7 +115,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={5} sx={{ border: 0 }}>
+                    <TableCell colSpan={7} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
@@ -105,6 +138,37 @@ const AddPanel: React.FC<AddPanelProps> = ({ parent, onBack, onSave }) => {
                             setImage(target.files[0]);
                         }
                     }} imageFile={image} imageFilePath={''} />
+                </TableCell>
+                {!parent && (
+                    <TableCell>
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>{t('tax_rates')}</InputLabel>
+                            <Select
+                                required
+                                value={taxRateId}
+                                onChange={(e) => {
+                                    setTaxRateId(Number(e.target.value))
+                                }}
+                                label={t('tax_rates')}
+                            >
+                                <MenuItem value={0} disabled>{t('select')}</MenuItem>
+                                {taxRates?.map((x) => (
+                                    <MenuItem value={x.tax_rate_id} key={x.tax_rate_id}>
+                                        {x.tax_rate_name} ({x.tax_rate_value}%)
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </TableCell>
+                )}
+                <TableCell>
+                    <PrinterMultiSelect
+                        printers={printers}
+                        value={printerIds}
+                        onChange={setPrinterIds}
+                        label={t('printer')}
+                        placeholder={t('select')}
+                    />
                 </TableCell>
                 <TableCell align="right"></TableCell>
                 <TableCell>

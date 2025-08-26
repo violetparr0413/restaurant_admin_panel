@@ -19,6 +19,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 
 import { Employee } from '../../utils/info';
@@ -27,16 +29,8 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import api, { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
+import { Tooltip } from '@mui/material';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -140,6 +134,12 @@ export default function Page({ rows, info, error }: TableProps) {
         setRows(rows);
     }, [rows]);
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rowsData?.length) : 0;
@@ -239,10 +239,11 @@ export default function Page({ rows, info, error }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell sx={{ width: 480 }}>{t('name')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }}>{t('role')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 320 }}>{t('name')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('role')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('allow_purchase')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }}>
+                        <StyledTableCell sx={{ width: 240 }}>
                             <IconButton aria-label="add"
                                 color="info"
                                 onClick={handleAddClick}
@@ -277,13 +278,20 @@ export default function Page({ rows, info, error }: TableProps) {
                                 <TableCell component="th" scope="row">
                                     {row?.name}
                                 </TableCell>
-                                <TableCell style={{ width: 160 }}>
-                                    {row?.role}
+                                <TableCell>
+                                    {USER_ROLE[row?.role]}
                                 </TableCell>
-                                <TableCell style={{ width: 160 }} align="right">
+                                <TableCell>
+                                    {row?.purchase_allow ? (
+                                        <CheckIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CloseIcon color="error" fontSize="small" />
+                                    )}
+                                </TableCell>
+                                <TableCell align="right">
                                     {convertDateTime(row?.created_at)}
                                 </TableCell>
-                                <TableCell style={{ width: 160 }}>
+                                <TableCell>
                                     <IconButton
                                         aria-label="edit"
                                         color="primary"
@@ -293,25 +301,29 @@ export default function Page({ rows, info, error }: TableProps) {
                                     >
                                         <EditIcon />
                                     </IconButton>
-                                    <IconButton
-                                        aria-label="reset"
-                                        color="warning"
-                                        onClick={() => handleResetClick(row)}
-                                        disabled={!row?.employee_id}
-                                        sx={{ mr: 1 }}
-                                    >
-                                        <LockResetIcon />
-                                    </IconButton>
-                                    {row?.is_logged_in && (
+                                    <Tooltip title={t('reset_password')}>
                                         <IconButton
-                                            aria-label="logout"
+                                            aria-label="reset"
                                             color="warning"
-                                            onClick={() => handleLogoutClick(row)}
+                                            onClick={() => handleResetClick(row)}
                                             disabled={!row?.employee_id}
                                             sx={{ mr: 1 }}
                                         >
-                                            <LogoutIcon />
+                                            <LockResetIcon />
                                         </IconButton>
+                                    </Tooltip>
+                                    {row?.is_logged_in && (
+                                        <Tooltip title={t('force_logout')}>
+                                            <IconButton
+                                                aria-label="logout"
+                                                color="warning"
+                                                onClick={() => handleLogoutClick(row)}
+                                                disabled={!row?.employee_id}
+                                                sx={{ mr: 1 }}
+                                            >
+                                                <LogoutIcon />
+                                            </IconButton>
+                                        </Tooltip>
                                     )}
                                     <IconButton
                                         aria-label="delete"
@@ -327,7 +339,7 @@ export default function Page({ rows, info, error }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={4} />
+                            <TableCell colSpan={5} />
                         </TableRow>
                     )}
                 </TableBody>
@@ -335,7 +347,7 @@ export default function Page({ rows, info, error }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={3}
+                            colSpan={5}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

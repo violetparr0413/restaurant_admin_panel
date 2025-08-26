@@ -25,6 +25,12 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
     const { t } = useTranslation('common')
     const [errorMessage, setErrorMessage] = useState('');
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     const handleDelete = () => {
         api.delete(`/users/${row?.user_id}`)
             .then(res => onDelete(row))
@@ -46,7 +52,7 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     {row?.username}
                 </TableCell>
                 <TableCell>
-                    {row?.user_role}
+                    {USER_ROLE[row?.user_role]}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

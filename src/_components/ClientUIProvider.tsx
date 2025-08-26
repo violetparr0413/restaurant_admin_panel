@@ -424,7 +424,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     return (
         <ClientUIContext.Provider value={value}>
             {props.children}
-            {/* Dish Drawer */}
+
             <Drawer
                 anchor={isMobile ? "bottom" : "right"}
                 open={dishDrawer.open}
@@ -432,7 +432,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                 PaperProps={{ sx: paperSx }}
             >
                 <TopBar isRed={false} title={t('dish_details')} onClose={() => setDishDrawer(p => ({ ...p, open: false }))} />
-                {/* Image */}
+
                 <Box sx={{
                     flexShrink: 0,
                     mt: 2, mb: 2,
@@ -442,7 +442,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                     backgroundSize: "cover",
                     backgroundPosition: "center"
                 }} />
-                {/* Name + Price */}
+
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Typography variant="h5" fontWeight={700}>{
                         locale === 'en' ? dishDrawer.dish?.dish_en_name :
@@ -453,7 +453,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                     <Typography variant="h5" fontWeight={700}>{formatJPY(dishDrawer.dish?.dish_price ?? 0)}</Typography>
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
-                {/* Footer */}
+
                 <FooterBar>
                     <QtyStepper
                         value={dishDrawer.qty}
@@ -487,7 +487,6 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                 </FooterBar>
             </Drawer>
 
-            {/* Cart Drawer */}
             <Drawer anchor={isMobile ? "bottom" : "right"} open={cartOpen} onClose={() => setCartOpen(false)} PaperProps={{ sx: paperSx }}>
                 <TopBar isRed={true} title={t('my_cart')} onClose={() => setCartOpen(false)} right={<Chip label={`Total ${formatJPY(cartTotal)}`} sx={{ bgcolor: "#ffc83d" }} />} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
@@ -535,7 +534,6 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                 </FooterBar>
             </Drawer>
 
-            {/* Call Service Drawer */}
             <Drawer anchor={isMobile ? "bottom" : "right"} open={serviceOpen} onClose={() => setServiceOpen(false)} PaperProps={{ sx: paperSx }}>
                 <TopBar isRed={true} title={t('call_service')} onClose={() => setServiceOpen(false)} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>

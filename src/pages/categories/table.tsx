@@ -60,17 +60,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
   const [rowData, setRowData] = React.useState<Category>(row);
 
   const [subview, setSubview] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
-  const [editSubItem, setEditSubItem] = React.useState<Category>({
-    category_id: 0,
-    category_name: '',
-    category_en_name: '',
-    category_zh_name: '',
-    category_ko_name: '',
-    parent_id: row?.category_id,
-    category_image: '',
-    category_order: 0,
-    created_at: new Date().toDateString(),
-  });
+  const [editSubItem, setEditSubItem] = React.useState<Category>(null);
 
   const handleEditClick = (item: Category) => {
     setView('edit');
@@ -108,23 +98,23 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
   };
 
   const handleSubSaveClick = (child: Category) => {
-    rowData.childs?.find(x => x.category_id === child.category_id) ?
+    rowData?.childs?.find(x => x.category_id === child.category_id) ?
       setRowData(rowData => ({
         ...rowData,
-        childs: (rowData.childs ?? [])?.map(x =>
+        childs: (rowData?.childs ?? [])?.map(x =>
           x.category_id === child.category_id ? child : x
         ),
       }))
       : setRowData(rowData => ({
         ...rowData,
-        childs: [...(rowData.childs ?? []), child]
+        childs: [...(rowData?.childs ?? []), child]
       }))
     setSubview('hide');
   };
 
   const handleSubDeleteReq = (child: Category) => {
-    const index = rowData.childs?.indexOf(child)
-    if (typeof index === 'number' && index !== -1) rowData.childs?.splice(index, 1);
+    const index = rowData?.childs?.indexOf(child)
+    if (typeof index === 'number' && index !== -1) rowData?.childs?.splice(index, 1);
     setRowData(prev => ({
       ...prev,
       childs: (prev.childs ?? []).filter(row => row !== child)
@@ -204,7 +194,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
   const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
-    const items = Array.from(rowData.childs ? rowData.childs : []);
+    const items = Array.from(rowData?.childs ? rowData?.childs : []);
     if (!items) return;
 
     const source_index = result.source.index
@@ -273,9 +263,17 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                     rowData?.category_name}
             </TableCell>
             <TableCell>
-              {rowData.category_image ? (<DishImagePreview
-                src={process.env.NEXT_PUBLIC_API_BASE_URL2 + rowData.category_image}
+              {rowData?.category_image ? (<DishImagePreview
+                src={process.env.NEXT_PUBLIC_API_BASE_URL2 + rowData?.category_image}
               />) : (<></>)}
+            </TableCell>
+            <TableCell>
+              {rowData?.tax_rate && (<>
+                {rowData?.tax_rate?.tax_rate_name} ({rowData?.tax_rate?.tax_rate_value}%)
+              </>)}
+            </TableCell>
+            <TableCell>
+              {rowData?.printers.reduce((a, x) => a += (a == '' ? '' : ', ') + x.printer_name, '')}
             </TableCell>
             <TableCell align="right">
               {convertDateTime(rowData?.created_at)}
@@ -285,7 +283,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                 aria-label="edit"
                 color="primary"
                 onClick={() => handleEditClick(rowData)}
-                disabled={!rowData.category_id}
+                disabled={!rowData?.category_id}
                 sx={{ mr: 1 }}
               >
                 <EditIcon />
@@ -294,7 +292,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                 aria-label="delete"
                 color="error"
                 onClick={() => handleDeleteClick(rowData)}
-                disabled={!rowData.category_id}
+                disabled={!rowData?.category_id}
               >
                 <DeleteIcon />
               </IconButton>
@@ -304,7 +302,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} />
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 1 }}>
               <Typography variant="h6" gutterBottom component="div">
@@ -317,7 +315,8 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                       <StyledSubTableCell sx={{ width: 50 }} />
                       <StyledSubTableCell sx={{ width: 50 }} />
                       <StyledSubTableCell sx={{ width: 160 }}>{t('name')}</StyledSubTableCell>
-                      <StyledSubTableCell sx={{ width: 240 }}>{t('image')}</StyledSubTableCell>
+                      <StyledSubTableCell sx={{ width: 160 }}>{t('image')}</StyledSubTableCell>
+                      <StyledSubTableCell sx={{ width: 240 }}>{t('printer')}</StyledSubTableCell>
                       <StyledSubTableCell sx={{ width: 240 }} align="right">{t('created_at')}</StyledSubTableCell>
                       <StyledSubTableCell sx={{ width: 160 }}>
                         <IconButton aria-label="add"
@@ -334,9 +333,9 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                       <TableBody ref={provided.innerRef}
                         {...provided.droppableProps}>
                         {subview === 'add' && (
-                          <AddPanel parent={rowData.category_id} onBack={handleSubBackClick} onSave={handleSubSaveClick} />
+                          <AddPanel parent={rowData?.category_id} onBack={handleSubBackClick} onSave={handleSubSaveClick} />
                         )}
-                        {rowData.childs?.map((childRow, index) => (
+                        {rowData?.childs?.map((childRow, index) => (
                           <Draggable
                             key={childRow.category_id}
                             draggableId={childRow.category_id.toString()}
@@ -382,6 +381,9 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
                                       {childRow.category_image ? (<DishImagePreview
                                         src={process.env.NEXT_PUBLIC_API_BASE_URL2 + childRow.category_image}
                                       />) : (<></>)}
+                                    </TableCell>
+                                    <TableCell>
+                                      {childRow?.printers?.reduce((a, x) => a += (a == '' ? '' : ', ') + x.printer_name, '')}
                                     </TableCell>
                                     <TableCell align="right">
                                       {convertDateTime(childRow?.created_at)}
@@ -594,7 +596,9 @@ export default function CollapsibleTable({ rows }: TableProps) {
                 <StyledTableCell sx={{ width: 50 }} />
                 <StyledTableCell sx={{ width: 50 }} />
                 <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
-                <StyledTableCell sx={{ width: 240 }}>{t('image')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 160 }}>{t('image')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 160 }}>{t('tax_rates')}</StyledTableCell>
+                <StyledTableCell sx={{ width: 240 }}>{t('printer')}</StyledTableCell>
                 <StyledTableCell sx={{ width: 240 }} align="right">{t('created_at')}</StyledTableCell>
                 <StyledTableCell sx={{ width: 160 }}>
                   <IconButton aria-label="add"

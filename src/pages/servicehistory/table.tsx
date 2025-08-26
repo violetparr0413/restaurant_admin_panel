@@ -21,6 +21,7 @@ import { ServiceHistory } from '../../utils/info';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { convertDateTime } from '@/utils/http_helper';
+import { useRouter } from 'next/router';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -117,6 +118,9 @@ export default function Page({ rows }: TableProps) {
     const [rowsPerPage, setRowsPerPage] = React.useState(25);
     const [maxHeight, setMaxHeight] = React.useState(0)
 
+    const router = useRouter();
+    const { locale } = router;
+
     React.useEffect(() => {
         setMaxHeight(document.documentElement.clientHeight - 120);
     }, []);
@@ -159,7 +163,10 @@ export default function Page({ rows }: TableProps) {
                     )?.map((row) => (
                         <TableRow key={row?.service_history_id}>
                             <TableCell component="th" scope="row">
-                                {row?.service?.service_name}
+                                {locale === 'en' ? row?.service?.service_en_name :
+                                    locale === 'zh' ? row?.service?.service_zh_name :
+                                        locale === 'ko' ? row?.service?.service_ko_name :
+                                            row?.service?.service_name}
                             </TableCell>
                             <TableCell>
                                 {row?.amount}

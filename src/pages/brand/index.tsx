@@ -301,6 +301,7 @@ const BrandConfigPage = () => {
                                     value={dish5}
                                     onChange={(e) => setDish5(e.target.value)}
                                 />
+
                             </Grid>
                         </Grid>
                     </Grid>

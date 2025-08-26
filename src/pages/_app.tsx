@@ -6,7 +6,7 @@ import createAppTheme from "@/theme/theme";
 import { useRouter } from "next/router";
 import Layout from "@/_components/Layout/Layout";
 
-import { Dashboard, Person3, Category, Person, Checklist, BrandingWatermark, History, TableView, Print, Logout, Payment } from '@mui/icons-material';
+import { Dashboard, Person3, Category, Person, Checklist, BrandingWatermark, History, TableView, Print, Logout, Payment, CardGiftcard, PinInvoke, AcUnit, PriorityHigh, Inventory2, Inventory, Support, Storefront, Handshake, Settings } from '@mui/icons-material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 
@@ -22,10 +22,16 @@ export async function getStaticProps({ locale }: { locale: string }) {
     };
 }
 
+interface ISidebarChildItems {
+    label: string;
+    url: string;
+}
+
 interface ISidebarItems {
     icon: React.ReactNode;
     label: string;
     url: string;
+    childs: ISidebarChildItems[] | null;
 }
 
 function App({ Component, pageProps }: AppProps) {
@@ -36,62 +42,113 @@ function App({ Component, pageProps }: AppProps) {
         {
             icon: <Dashboard />,
             label: t('dashboard'),
-            url: '/dashboard'
+            url: '/dashboard',
+            childs: null,
         },
         {
             icon: <BrandingWatermark />,
             label: t('brand'),
-            url: '/brand'
+            url: '/brand',
+            childs: null,
         },
         {
             icon: <Person3 />,
             label: t('users'),
-            url: '/users'
+            url: '/users',
+            childs: null,
         },
         {
             icon: <Category />,
             label: t('categories'),
-            url: '/categories'
+            url: '/categories',
+            childs: null,
         },
         {
             icon: <Person />,
             label: t('employees'),
-            url: '/employees'
+            url: '/employees',
+            childs: null,
         },
         {
             icon: <Checklist />,
             label: t('dishes'),
-            url: '/dishes'
+            url: '/dishes',
+            childs: null,
         },
         {
             icon: <ShoppingCartIcon />,
             label: t('orders'),
-            url: '/orders'
-        },
-        {
-            icon: <SupportAgentIcon />,
-            label: t('services'),
-            url: '/services'
+            url: '/orders',
+            childs: null,
         },
         {
             icon: <History />,
-            label: t('service_history'),
-            url: '/servicehistory'
+            label: t('services'),
+            url: null,
+            childs: [
+                {
+                    label: t('service_list'),
+                    url: '/services',
+                },
+                {
+                    label: t('service_history'),
+                    url: '/servicehistory',
+                },
+            ]
         },
         {
             icon: <TableView />,
             label: t('tables'),
-            url: '/tables'
+            url: '/tables',
+            childs: null,
         },
         {
-            icon: <Print />,
-            label: t('printers'),
-            url: '/printers'
+            icon: <Settings />,
+            label: t('settings'),
+            url: null,
+            childs: [
+                {
+                    label: t('printers'),
+                    url: '/printers',
+                },
+                {
+                    label: t('payment_methods'),
+                    url: '/payments',
+                },
+                {
+                    label: t('tax_rates'),
+                    url: '/tax_rate',
+                },
+            ]
         },
         {
-            icon: <Payment />,
-            label: t('payment_methods'),
-            url: '/payments'
+            icon: <PinInvoke />,
+            label: t('invoice_log'),
+            url: '/invoice',
+            childs: null,
+        },
+        {
+            icon: <Inventory2 />,
+            label: t('inventory'),
+            url: null,
+            childs: [
+                {
+                    label: t('inventory_unit'),
+                    url: '/inventory_unit',
+                },
+                {
+                    label: t('supplier'),
+                    url: '/supplier',
+                },
+                {
+                    label: t('inventory'),
+                    url: '/inventory',
+                },
+                {
+                    label: t('report_inventory'),
+                    url: '/report_inventory',
+                },
+            ],
         }
     ];
 
@@ -108,6 +165,12 @@ function App({ Component, pageProps }: AppProps) {
         { url: '/tables', label: t('tables') },
         { url: '/printers', label: t('printers') },
         { url: '/payments', label: t('payment_methods') },
+        { url: '/tax_rate', label: t('tax_rates') },
+        { url: '/invoice', label: t('invoice_log') },
+        { url: '/inventory_unit', label: t('inventory_unit') },
+        { url: '/supplier', label: t('supplier') },
+        { url: '/inventory', label: t('inventory') },
+        { url: '/report_inventory', label: t('report_inventory') },
     ]
 
     const { locale = 'ja' } = useRouter();

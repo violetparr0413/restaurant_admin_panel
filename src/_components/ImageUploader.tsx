@@ -11,7 +11,7 @@ type ParamTypes = {
 const ImageUploader: React.FC<ParamTypes> = ({ imageFile, imageFilePath, handleImageChange }) => {
 
   return (
-    <Box position="relative" width={50} height={50}>
+    <Box position="relative" width={160} height={160}>
       <Avatar
         src={
           imageFile

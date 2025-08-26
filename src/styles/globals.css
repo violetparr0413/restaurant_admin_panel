@@ -5,6 +5,7 @@
   --foreground: #171717;
   --dark-orange: #EF6C00;
   --nav-color: #253034;
+  --nav-child-color: #23292b;
 }
 
 @theme inline {
@@ -64,4 +65,8 @@ body {
 
 .MuiDataGrid-main > div:last-child {
   display: none !important;
+}
+
+.bg-dark-child-nav {
+  background-color: var(--nav-child-color) !important;
 }

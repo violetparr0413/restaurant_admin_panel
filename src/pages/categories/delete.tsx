@@ -13,17 +13,8 @@ import { Category } from '../../utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import DishImagePreview from '@/_components/ImagePreview';
 import { useRouter } from 'next/router';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type DeletePanelProps = {
     row: Category;
@@ -72,6 +63,16 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                 {row?.category_image ? (<DishImagePreview
                     src={process.env.NEXT_PUBLIC_API_BASE_URL2 + row?.category_image}
                 />) : (<></>)}
+            </TableCell>
+            {!row?.parent_id && (
+                <TableCell>
+                    {row?.tax_rate && (<>
+                        {row?.tax_rate?.tax_rate_name} ({row?.tax_rate?.tax_rate_value}%)
+                    </>)}
+                </TableCell>
+            )}
+            <TableCell>
+                {row?.printers.reduce((a, x) => a += (a == '' ? '' : ', ') + x.printer_name, '')}
             </TableCell>
             <TableCell align="right">
                 {convertDateTime(row?.created_at)}

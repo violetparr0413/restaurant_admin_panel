@@ -127,6 +127,12 @@ export default function Page({ rows }: TableProps) {
         setRows(rows);
     }, [rows]);
 
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rowsData?.length) : 0;
@@ -221,7 +227,7 @@ export default function Page({ rows }: TableProps) {
                                     {row?.username}
                                 </TableCell>
                                 <TableCell style={{ width: 160 }}>
-                                    {row?.user_role}
+                                    {USER_ROLE[row?.user_role]}
                                 </TableCell>
                                 <TableCell style={{ width: 160 }} align="right">
                                     {convertDateTime(row?.created_at)}
@@ -258,7 +264,7 @@ export default function Page({ rows }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={3}
+                            colSpan={4}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

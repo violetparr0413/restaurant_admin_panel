@@ -9,19 +9,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import { Employee } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type DeletePanelProps = {
     row: Employee;
@@ -33,6 +26,12 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     const { t } = useTranslation('common')
     const [errorMessage, setErrorMessage] = useState('');
+
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
 
     const handleDelete = () => {
         api.delete(`/employee/${row?.employee_id}`)
@@ -55,7 +54,14 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     {row?.name}
                 </TableCell>
                 <TableCell>
-                    {row?.role}
+                    {USER_ROLE[row?.role]}
+                </TableCell>
+                <TableCell>
+                    {row?.purchase_allow ? (
+                        <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                        <CloseIcon color="error" fontSize="small" />
+                    )}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

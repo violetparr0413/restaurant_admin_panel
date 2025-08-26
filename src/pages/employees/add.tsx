@@ -7,6 +7,9 @@ import {
     MenuItem,
     Alert,
     Box,
+    FormControl,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -35,6 +38,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     const [name, setName] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>('');
+    const [allowPurchase, setAllowPurchase] = useState<boolean>(false);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -45,6 +49,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             formData.append('name', name);
             formData.append('password', password);
             formData.append('role', role);
+            (allowPurchase !== null) && formData.append('purchase_allow', allowPurchase ? '1' : '0');
 
             api.post('/employee', formData)
                 .then(res => onSave(res.data.employee))
@@ -101,6 +106,19 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                             <MenuItem value={key}>{value}</MenuItem>
                         ))}
                     </Select>
+                </TableCell>
+                <TableCell>
+                    {role === 'COUNTER' && (
+                        <FormControl component="fieldset" variant="standard">
+                            <FormControlLabel
+                                control={
+                                    <Switch checked={allowPurchase} onChange={(e) => setAllowPurchase(e.target.checked)} name="gilad" />
+                                }
+                                sx={{ mt: 1, ml: 1 }}
+                                label={t('allow_purchase')}
+                            />
+                        </FormControl>
+                    )}
                 </TableCell>
                 <TableCell align="right"></TableCell>
                 <TableCell>

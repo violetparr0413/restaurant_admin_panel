@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert } from '@mui/material';
+import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert, Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import api, { getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
 import { Order } from '@/utils/info';
+import { useRouter } from 'next/router';
 
 type ParamProps = {
   refresh: (datas: Order[]) => void;
@@ -30,6 +32,62 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
   const [toDate, setToDate] = React.useState(today);
 
   const [errorMessage, setErrorMessage] = React.useState('');
+
+  const router = useRouter();
+  const { locale } = router;
+
+  const handleExport = () => {
+    if (fromDate && toDate) {
+      setErrorMessage('');
+
+      const formData = new FormData();
+
+      dish && formData.append('dish', dish);
+      table && formData.append('table', table);
+      status && status !== 'ALL' && formData.append('order_status', status);
+      formData.append('from_date', fromDate);
+      formData.append('to_date', toDate);
+      formData.append('locale', locale);
+      
+      api.post(`/download-csv`, formData, {
+        responseType: 'blob',                     // <— important
+        validateStatus: s => (s >= 200 && s < 300) || s === 422,
+      })
+        .then(res => {
+          const cd = res.headers['content-disposition'] || '';
+          const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
+          const serverName = m?.[1] ? decodeURIComponent(m[1]) : m?.[2];
+          const fallback = `export_${fromDate}_${toDate}.csv`;
+          const filename = (serverName || fallback).replace(/[/\\?%*:|"<>]/g, '-');
+
+          // build a download from the blob
+          const type = res.headers['content-type'] || 'text/csv;charset=utf-8';
+          const blob = new Blob([res.data], { type });
+          const href = URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+          a.href = href;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(href);
+        })
+        .catch(error => {
+          if (error?.response?.status === 422) {
+            console.log(error.response.data);
+            setErrorMessage(t('something_went_wrong'));
+          } else {
+            console.error(t('unexpected_error'), error);
+            setErrorMessage(t('something_went_wrong'));
+          }
+        });
+    } else if (!fromDate) {
+      setErrorMessage(t('from_date_field_required'));
+    } else if (!toDate) {
+      setErrorMessage(t('to_date_field_required'));
+    }
+  }
 
   const handleSearch = React.useCallback(() => {
     if (fromDate && toDate) {
@@ -121,7 +179,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <MenuItem value="ALL">{t('All')}</MenuItem>
+              <MenuItem value="ALL">{t('all')}</MenuItem>
               {Object.entries(ORDER_STATUS)?.map(([key, value]) => (
                 <MenuItem value={key}>{value}</MenuItem>
               ))}
@@ -160,6 +218,11 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
           >
             <SearchIcon />
           </IconButton>
+          <Tooltip title={t('export_csv')}>
+            <IconButton color="primary" onClick={handleExport}>
+              <FileDownloadIcon />
+            </IconButton>
+          </Tooltip>
         </Grid>
       </Grid>
     </Box>

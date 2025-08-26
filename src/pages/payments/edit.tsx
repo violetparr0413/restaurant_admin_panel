@@ -9,18 +9,9 @@ import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
 import { PaymentMethod } from '@/utils/info';
-import api from '@/utils/http_helper';
+import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type EditPanelProps = {
     row: PaymentMethod,
@@ -81,7 +72,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell align="right"></TableCell>
+                <TableCell align="right">{convertDateTime(row?.created_at)}</TableCell>
                 <TableCell>
                     <IconButton
                         aria-label="save"

@@ -20,13 +20,20 @@ import Typography from '@mui/material/Typography';
 
 import { Logout } from '@mui/icons-material';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
+import { Collapse } from '@mui/material';
 
 const drawerWidth = 240;
+
+interface ISidebarChildItems {
+    label: string;
+    url: string;
+}
 
 interface ISidebarItems {
     icon: React.ReactNode;
     label: string;
     url: string;
+    childs: ISidebarChildItems[] | null;
 }
 
 interface IPath {
@@ -65,6 +72,16 @@ export default function Layer(props: Props) {
         }
     };
 
+    const [openCategory, setOpenCategory] = React.useState(false);
+
+    const handleCategoryClick = () => {
+        setOpenCategory(!openCategory);
+    };
+
+    const [openById, setOpenById] = React.useState<Record<string, boolean>>({});
+
+    const toggle = (id: string) => setOpenById(prev => ({ ...prev, [id]: !prev[id] }));
+
     const drawer = (
         <Box className="bg-dark-nav" sx={{
             color: 'white',
@@ -73,20 +90,47 @@ export default function Layer(props: Props) {
             <Toolbar />
             <Divider />
             <List>
-                {sidebarItems.map((sidebarItem, key) => (
-                    <ListItem key={key} disablePadding>
-                        <ListItemButton
-                            href={sidebarItem.url}
-                            component={Link}
-                            sx={{ textDecoration: 'none', color: 'inherit' }}
-                            selected={router.pathname === sidebarItem.url}>
-                            <ListItemIcon sx={{ color: 'white' }}>
-                                {sidebarItem.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={sidebarItem.label} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
+                {sidebarItems.map((sidebarItem) => {
+                    const id = sidebarItem.label; // ensure this is unique; prefer a real id
+                    const isOpen = !!openById[id];
+                    const isActive =
+                        sidebarItem.url
+                            ? router.pathname === sidebarItem.url
+                            : sidebarItem.childs?.some(c => router.pathname === c.url);
+
+                    return (
+                        <div key={id}>
+                            <ListItem disablePadding onClick={sidebarItem.childs ? () => toggle(id) : undefined}>
+                                <ListItemButton
+                                    component={sidebarItem.url ? Link : 'div'}
+                                    href={sidebarItem.url ?? undefined}
+                                    sx={{ textDecoration: 'none', color: 'inherit' }}
+                                    selected={isActive}
+                                >
+                                    <ListItemIcon sx={{ color: 'white' }}>{sidebarItem.icon}</ListItemIcon>
+                                    <ListItemText primary={sidebarItem.label} />
+                                </ListItemButton>
+                            </ListItem>
+
+                            {sidebarItem.childs && (
+                                <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                                    {sidebarItem.childs.map((item) => (
+                                        <ListItem key={`${id}-${item.url}`} disablePadding className="bg-dark-child-nav">
+                                            <ListItemButton
+                                                component={Link}
+                                                href={item.url}
+                                                sx={{ textDecoration: 'none', color: 'inherit' }}
+                                                selected={router.pathname === item.url}
+                                            >
+                                                <ListItemText sx={{ ml: 4 }} primary={item.label} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </Collapse>
+                            )}
+                        </div>
+                    );
+                })}
             </List>
         </Box>
     );

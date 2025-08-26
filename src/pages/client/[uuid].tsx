@@ -13,10 +13,14 @@ export default function ClientUuid() {
     clientApi.post("/get-token", { uuid })
       .then((res) => {
         if (res.data.status === "success") {
-          localStorage.setItem("token", res.data.access_token || "");
-          localStorage.setItem("employee_id", res.data.employee_id || "");
-          localStorage.setItem("guest_id", res.data.guest_id || "");
-          router.replace("/client");
+          if(res.data.message == "valid_token"){
+            router.replace(res.data.url);
+          } else {
+            localStorage.setItem("token", res.data.access_token || "");
+            localStorage.setItem("employee_id", res.data.employee_id || "");
+            localStorage.setItem("guest_id", res.data.guest_id || "");
+            router.replace("/client");
+          }
         } else {
           setErrorMsg("Invalid or expired link. Please try again.");
         }

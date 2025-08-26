@@ -17,8 +17,9 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import { CancelOutlined, KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
+import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import Avatar from '@mui/material/Avatar';
 
 import { Dish } from '../../utils/info';
@@ -31,6 +32,7 @@ import { deepOrange, green } from '@mui/material/colors';
 import DishImagePreview from '@/_components/ImagePreview';
 import { convertDateTime } from '@/utils/http_helper';
 import { useRouter } from 'next/router';
+import YouTubeThumbnail from '@/_components/YouTubeThumbnail';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -201,11 +203,12 @@ export default function Page({ rows }: TableProps) {
                         <StyledTableCell sx={{ width: 160 }}>{t('subcategory')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 80 }}>{t('image')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 80 }}>{t('youtube')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 160 }}>{t('printer')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 120 }}>{t('price')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 100 }}>{t('available')}</StyledTableCell>
                         <StyledTableCell align="right" sx={{ width: 100 }}>{t('status')}</StyledTableCell>
-                        <StyledTableCell align="right" sx={{ width: 240 }}>{t('created_at')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }}>
+                        <StyledTableCell sx={{ width: 160 }}>
                             <IconButton aria-label="add"
                                 color="info"
                                 onClick={handleAddClick}
@@ -269,21 +272,30 @@ export default function Page({ rows }: TableProps) {
                                         src={process.env.NEXT_PUBLIC_API_BASE_URL2 + row?.dish_image}
                                     />) : (<></>)}
                                 </TableCell>
+                                <TableCell>
+                                    {row?.youtube_url && (<YouTubeThumbnail url={row?.youtube_url} />)}
+                                </TableCell>
+                                <TableCell>
+                                    {row?.printers?.reduce((a, x) => a += (a == '' ? '' : ', ') + x.printer_name, '')}
+                                </TableCell>
                                 <TableCell align="right">
                                     {row?.dish_price}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {row?.dish_available ? (<Avatar sx={{ bgcolor: green[500], width: 32, height: 32 }}>
-                                        <CheckIcon />
-                                    </Avatar>) : (<Avatar sx={{ bgcolor: deepOrange[500], width: 32, height: 32 }}>
-                                        <CancelOutlined />
-                                    </Avatar>)}
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                        {row?.dish_available ? (
+                                            <Avatar sx={{ bgcolor: green[500], width: 32, height: 32 }}>
+                                                <CheckIcon sx={{ width: 20, height: 20 }} />
+                                            </Avatar>
+                                        ) : (
+                                            <Avatar sx={{ bgcolor: deepOrange[500], width: 32, height: 32 }}>
+                                                <CloseIcon sx={{ width: 20, height: 20 }} />
+                                            </Avatar>
+                                        )}
+                                    </Box>
                                 </TableCell>
                                 <TableCell align="right">
                                     {DISH_STATUS[row?.dish_status]}
-                                </TableCell>
-                                <TableCell align="right">
-                                    {convertDateTime(row?.created_at)}
                                 </TableCell>
                                 <TableCell>
                                     <IconButton
@@ -309,7 +321,7 @@ export default function Page({ rows }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={9} />
+                            <TableCell colSpan={10} />
                         </TableRow>
                     )}
                 </TableBody>
@@ -317,7 +329,7 @@ export default function Page({ rows }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={9}
+                            colSpan={10}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}
