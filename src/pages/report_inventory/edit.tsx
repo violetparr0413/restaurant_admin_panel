@@ -3,47 +3,39 @@ import {
     TableRow,
     TableCell,
     TextField,
-    Alert
+    Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import IconButton from '@mui/material/IconButton';
-import { Inventory } from '@/utils/info';
+import { ReportInventory } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
-type ParamProps = {
-    row: Inventory;
+type EditPanelProps = {
+    row: ReportInventory;
+    onSave: (id: number, remark: string) => void;
     onBack: () => void;
-    onSave: (data: Inventory) => void;
 };
 
-const EditPanel: React.FC<ParamProps> = ({ row, onBack, onSave }) => {
+const EditPanel: React.FC<EditPanelProps> = ({ row, onSave, onBack }) => {
 
     const { t } = useTranslation('common')
 
-    const [stock, setStock] = useState<number>(row?.current_stock || 0);
-
+    const [remark, setRemark] = useState<string>(row?.inventory.remark ?? "")
     const [errorMessage, setErrorMessage] = useState('');
-
-    const router = useRouter();
-    const { locale } = router;
-
-    React.useEffect(() => {
-    }, [locale]);
 
     const handleSave = () => {
         const formData = new FormData();
 
-        formData.append("_method", "put")
+        formData.append('inventory_id', row?.inventory.inventory_id.toString())
+        formData.append('remark', remark)
 
-        formData.append('stock', stock.toString());
-
-        api.post(`/inventory/${row?.inventory_id}`, formData)
+        api.post(`/update-inventory-remark`, formData)
             .then(res => {
-                onSave({ ...res.data, current_stock: stock })
+                onSave(row?.inventory.inventory_id, remark)
             })
             .catch(error => {
                 if (error.response && error.response.status === 422) {
@@ -63,32 +55,47 @@ const EditPanel: React.FC<ParamProps> = ({ row, onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={3} sx={{ border: 0 }}>
+                    <TableCell colSpan={9} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
             <TableRow>
+                <TableCell component="th" scope="row">
+                    {row?.inventory.name}
+                </TableCell>
                 <TableCell>
-                    {row?.name}
+                    {row?.inventory.unit?.unit_name}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.openStock ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.purchasedQty ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.actualStock ? Math.round(row?.difference / row?.actualStock * 100) + '%' : '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.salesConsumption ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.theoreticalBalance ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.actualStock ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {row?.difference ?? '--'}
                 </TableCell>
                 <TableCell>
                     <TextField
                         fullWidth
-                        value={stock}
-                        type="number"
-                        onChange={(e) => setStock(Number(e.target.value))}
-                        placeholder={t('stock')}
-                        label={t('stock')}
+                        value={remark}
+                        onChange={(e) => setRemark(e.target.value)}
+                        placeholder={t('remarks')}
+                        label={t('remarks')}
                     />
                 </TableCell>
-                <TableCell>
-                    {row?.request_amount}
-                </TableCell>
-                <TableCell>
-                    {row?.unit?.unit_name}
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
                 <TableCell>
                     <IconButton
                         aria-label="save"

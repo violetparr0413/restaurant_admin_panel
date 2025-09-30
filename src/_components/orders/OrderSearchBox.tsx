@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert, Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import api, { getCurrentDate } from '@/utils/http_helper';
+import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
 import { Order } from '@/utils/info';
@@ -13,6 +13,7 @@ type ParamProps = {
 };
 
 const today = getCurrentDate();
+const monthago = get1MonthAgo()
 
 const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
@@ -28,7 +29,7 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
   const [dish, setDish] = React.useState('');
   const [table, setTable] = React.useState('');
   const [status, setStatus] = React.useState('');
-  const [fromDate, setFromDate] = React.useState(today);
+  const [fromDate, setFromDate] = React.useState(monthago);
   const [toDate, setToDate] = React.useState(today);
 
   const [errorMessage, setErrorMessage] = React.useState('');
@@ -45,8 +46,8 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
       dish && formData.append('dish', dish);
       table && formData.append('table', table);
       status && status !== 'ALL' && formData.append('order_status', status);
-      formData.append('from_date', fromDate);
-      formData.append('to_date', toDate);
+      formData.append('from_date', convertDateTime1(fromDate));
+      formData.append('to_date', convertDateTime2(toDate));
       formData.append('locale', locale);
       
       api.post(`/download-csv`, formData, {
@@ -98,8 +99,8 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
       dish && formData.append('dish', dish);
       table && formData.append('table', table);
       status && status !== 'ALL' && formData.append('order_status', status);
-      formData.append('from_date', fromDate);
-      formData.append('to_date', toDate);
+      formData.append('from_date', convertDateTime1(fromDate));
+      formData.append('to_date', convertDateTime2(toDate));
 
       api.post('/search-order', formData)
         .then(res => refresh(res.data.orders))

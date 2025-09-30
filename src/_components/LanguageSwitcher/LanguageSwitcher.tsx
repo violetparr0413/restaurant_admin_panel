@@ -5,7 +5,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 const Languages = {
-    ko: { label: '조선어', flag: '/images/ko.jpg' },
+    ko: { label: '한국어', flag: '/images/ko.jpg' },
     en: { label: 'English', flag: '/images/en.jpg' },
     zh: { label: '中文', flag: '/images/zh.jpg' },
     ja: { label: '日本語', flag: '/images/ja.jpg' },

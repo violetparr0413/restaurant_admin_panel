@@ -20,6 +20,48 @@ export const getCurrentDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+export const get1MonthAgo = () => {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth()).padStart(2, "0"); // add leading zero
+  const day = String(now.getDate()).padStart(2, "0"); // add leading zero
+
+  return `${year}-${month}-${day}`;
+}
+
+export const convertDateTime1 = (input: string) => {
+  if (!input) return "";
+  // Clean input to valid ISO (remove extra microseconds)
+  const cleanInput = input.replace(/\.\d+Z$/, "Z");
+
+  const date = new Date(cleanInput);
+
+  // Manually build string using UTC getters
+  const month = date.getUTCMonth() + 1; // months 0-11
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
+
+  const dateString = `${year}-${month}-${day} 00:00:00`;
+  return dateString;
+};
+
+export const convertDateTime2 = (input: string) => {
+  if (!input) return "";
+  // Clean input to valid ISO (remove extra microseconds)
+  const cleanInput = input.replace(/\.\d+Z$/, "Z");
+
+  const date = new Date(cleanInput);
+
+  // Manually build string using UTC getters
+  const month = date.getUTCMonth() + 1; // months 0-11
+  const day = date.getUTCDate();
+  const year = date.getUTCFullYear();
+
+  const dateString = `${year}-${month}-${day} 23:59:59`;
+  return dateString;
+};
+
 export const getEpochValue = (date: string) => {
   const dateObj = new Date(date);
   return Math.floor(dateObj.getTime() / 1000) * 1000; // Convert to seconds
@@ -49,6 +91,18 @@ export const convertDateTime = (input: string) => {
   const dateString = `${month}/${day}/${year}  ${hour}:${minute}:${second} ${ampm}`;
   return dateString;
 };
+
+export const safeJsonParseArray = (str: any) => {
+  if (!str || typeof str !== 'string') return [];
+  try {
+    const parsed = JSON.parse(str);
+    console.log(str)
+    console.log(parsed)
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 export const getCurrentTimeMin = () => {
   const now = new Date();
@@ -91,10 +145,10 @@ export const uploader = axios.create({
 
 uploader.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  const lng = localStorage.getItem('locale');
+  // const lng = localStorage.getItem('locale');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    config.headers.Locale = lng;
+    // config.headers.Locale = lng;
   }
   return config;
 });
@@ -113,10 +167,10 @@ uploader.interceptors.response.use(
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  const lng = localStorage.getItem('locale');
+  // const lng = localStorage.getItem('locale');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    config.headers.Locale = lng;
+    // config.headers.Locale = lng;
   }
   return config;
 });

@@ -5,31 +5,45 @@ import {
     Alert,
 } from '@mui/material';
 
-import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckIcon from '@mui/icons-material/Check';
 import { Employee } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
 
-type DeletePanelProps = {
+type PanelProps = {
     row: Employee;
     onBack: () => void;
-    onDelete: (data: Employee) => void;
+    onConfirm: (data: Employee) => void;
 };
 
-const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
+const Panel: React.FC<PanelProps> = ({ row, onBack, onConfirm }) => {
 
     const { t } = useTranslation('common')
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handleDelete = () => {
-        api.delete(`/employee/${row?.employee_id}`)
-            .then(res => onDelete(row))
+    const USER_ROLE = {
+        'ADMIN': t('admin'),
+        'WAITSTAFF': t('waitstuff'),
+        'COUNTER': t('counter')
+    }
+
+    const handleConfirm = () => {
+        const form = new FormData();
+
+        form.append('employee_id', row?.employee_id.toString());
+        form.append('is_logged_in', '0');
+
+        api.post(`/change-logged-in`, form)
+            .then(res => onConfirm(res.data.employee))
             .catch(error => {
-                if (error.response) {
+                if (error.response && error.response.status === 422) {
+                    setErrorMessage(t('something_went_wrong'));
+                } else {
+                    // Other errors
                     console.error(t('unexpected_error'), error);
                     setErrorMessage(t('something_went_wrong'));
                 }
@@ -38,32 +52,31 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
 
     return (
         <>
-            {errorMessage && (<TableRow>
-                <TableCell colSpan={4} sx={{ border: 0 }}>
-                    <Alert severity="error">{errorMessage}</Alert>
-                </TableCell>
-            </TableRow>)}
+            {errorMessage && (
+                <Alert severity="error">{errorMessage}</Alert>
+            )}
             <TableRow>
-                <TableCell>
-                </TableCell>
                 <TableCell>
                     {row?.name}
                 </TableCell>
                 <TableCell>
-                    {row?.num_of_people}
+                    {USER_ROLE[row?.role]}
+                </TableCell>
+                <TableCell colSpan={4}>
+                    {t('are_you_really_forcing')}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}
                 </TableCell>
                 <TableCell>
                     <IconButton
-                        aria-label="delete"
-                        color="error"
-                        onClick={handleDelete}
+                        aria-label="confirm"
+                        color="primary"
+                        onClick={handleConfirm}
                         disabled={!row?.employee_id}
                         sx={{ mr: 1 }}
                     >
-                        <DeleteIcon />
+                        <CheckIcon />
                     </IconButton>
                     <IconButton
                         aria-label="delete"
@@ -78,4 +91,4 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
     );
 };
 
-export default DeletePanel;
+export default Panel;

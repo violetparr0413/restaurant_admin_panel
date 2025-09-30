@@ -121,16 +121,17 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         label={t('stock')}
                     />
                 </TableCell>
+                <TableCell></TableCell>
                 <TableCell>
                     <FormControl fullWidth variant="outlined">
-                        <InputLabel>{t('inventory_unit')}</InputLabel>
+                        <InputLabel>{t('product_unit')}</InputLabel>
                         <Select
                             required
                             value={unitId}
                             onChange={(e) => {
                                 setUnitId(Number(e.target.value))
                             }}
-                            label={t('inventory_unit')}
+                            label={t('product_unit')}
                         >
                             <MenuItem value={0} disabled>{t('select')}</MenuItem>
                             {units?.map((x) => (
@@ -145,6 +146,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         </Select>
                     </FormControl>
                 </TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
                 <TableCell>
                     <IconButton
                         aria-label="save"

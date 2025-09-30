@@ -1,51 +1,69 @@
 import React from 'react';
-import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert, Tooltip, FormControlLabel, Switch } from '@mui/material';
+import { Box, TextField, MenuItem, FormControl, InputLabel, Select, Grid, IconButton, Typography, Alert, Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { InvoiceLog, PaymentMethod } from '@/utils/info';
+import { PurchaseHistory, Supplier } from '@/utils/info';
+import { useRouter } from 'next/router';
 
 type ParamProps = {
-  refresh: (datas: InvoiceLog[]) => void;
+  refresh: (datas: PurchaseHistory[]) => void;
 };
 
 const today = getCurrentDate();
 const monthago = get1MonthAgo()
 
-const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
+const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const { t } = useTranslation('common')
 
-  const PAID_STATUS = [
-    t('all'),
-    t('paid'),
-    t('unpaid')
-  ]
+  const FILTER = {
+    "ALL": t('all'),
+    "PURCHASED": t('purchased'),
+    "INPUT": t('input')
+  }
 
-  const [isPaid, setIsPaid] = React.useState(0);
-  const [paymentMethodId, setPaymentMethodId] = React.useState(0);
+  const [filter, setFilter] = React.useState('ALL');
+  const [supplierId, setSupplierId] = React.useState(0);
   const [fromDate, setFromDate] = React.useState(monthago);
   const [toDate, setToDate] = React.useState(today);
-  const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[] | null>(null);
 
   const [errorMessage, setErrorMessage] = React.useState('');
+  const [suppliers, setSuppliers] = React.useState<Supplier[]>([]);
+
+  const router = useRouter();
+  const { locale } = router;
+
+  const getSuppliers = () => {
+    api.get('/supplier') // your server endpoint
+      .then(res => {
+        setSuppliers(res.data)
+      })
+      .catch(error => {
+        if (error.response) {
+          console.error(t('unexpected_error'), error);
+          setErrorMessage(t('something_went_wrong'));
+        }
+      });
+  }
 
   const handleSearch = React.useCallback(() => {
-    if (fromDate && toDate) {
+    if (fromDate && toDate && filter) {
       setErrorMessage('');
 
       const formData = new FormData();
 
-      isPaid && formData.append('is_paid', (isPaid === 1 ? true : false).toString());
-      formData.append('payment_method_id', paymentMethodId.toString());
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      formData.append('filter', filter);
+      supplierId && formData.append('supplier_id', supplierId.toString());
+      formData.append('from', convertDateTime1(fromDate));
+      formData.append('to', convertDateTime2(toDate));
 
-      api.post('/get-guest-by-date', formData)
+      api.post('/get-inventory-history', formData)
         .then(res => {
           // console.log(res.data)
-          refresh(res.data.data) 
+          refresh(res.data)
         })
         .catch(error => {
           if (error?.response?.status === 422) {
@@ -60,27 +78,19 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
       setErrorMessage(t('from_date_field_required'));
     } else if (!toDate) {
       setErrorMessage(t('to_date_field_required'));
+    } else if (!filter) {
+      setErrorMessage(t('filter_field_required'));
     }
-  }, [isPaid, paymentMethodId, fromDate, toDate]); // <— include deps
-
-  const getPayments = () => {
-    api.get('/payment-method') // your server endpoint
-      .then(res => setPaymentMethods(res.data))
-      .catch(error => {
-        if (error.response) {
-          console.error(t('unexpected_error'), error);
-          setErrorMessage(t('something_went_wrong'));
-        }
-      });
-  }
+  }, [filter, supplierId, fromDate, toDate]); // <— include deps
 
   React.useEffect(() => {
-    getPayments();
+    getSuppliers()
   }, [])
 
   React.useEffect(() => {
     // run immediately
     handleSearch();
+
     // and poll every 5s with the *current* filters
     const id = setInterval(handleSearch, 5000);
     return () => clearInterval(id);
@@ -101,7 +111,7 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
           fontSize: '0.875rem',
         }}
       >
-        {t('invoice_log_search')}
+        {t('purchase_history_filter')}
       </Typography>
       <Grid container spacing={2} alignItems="center">
         {errorMessage && (
@@ -111,33 +121,29 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
         )}
         <Grid size={{ xs: 12, sm: 2 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('payment_methods')}</InputLabel>
+            <InputLabel>{t('filter')}</InputLabel>
             <Select
-              label={t('payment_methods')}
-              value={paymentMethodId}
-              onChange={(e) => setPaymentMethodId(Number(e.target.value))}
+              label={t('filter')}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
             >
-              <MenuItem value={0}>{t('all')}</MenuItem>
-              {paymentMethods?.map((x) => (
-                <MenuItem value={x.payment_method_id}>
-                  {x?.payment_method_name}
-                </MenuItem>
+              {Object.entries(FILTER)?.map(([key, value]) => (
+                <MenuItem value={key}>{value}</MenuItem>
               ))}
             </Select>
           </FormControl>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <FormControl fullWidth size="small">
-            <InputLabel>{t('is_paid')}</InputLabel>
+            <InputLabel>{t('supplier')}</InputLabel>
             <Select
-              label={t('is_paid')}
-              value={isPaid}
-              onChange={(e) => setIsPaid(Number(e.target.value))}
+              label={t('supplier')}
+              value={supplierId}
+              onChange={(e) => setSupplierId(Number(e.target.value))}
             >
-              {PAID_STATUS.map((x, i) => (
-                <MenuItem value={i}>
-                  {x}
-                </MenuItem>
+              <MenuItem value={0}>{t('all')}</MenuItem>
+              {suppliers?.map((x) => (
+                <MenuItem value={x.supplier_id}>{x.supplier_name}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -180,4 +186,4 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
   );
 };
 
-export default InvoiceSearchBox;
+export default SearchBox;

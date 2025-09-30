@@ -31,7 +31,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     const USER_ROLE = {
         'ADMIN': t('admin'),
         'WAITSTAFF': t('waitstuff'),
-        'COUNTER': t('counter')
+        'COUNTER': t('counter'),
+        'TABLE': t('table')
     }
 
     const [name, setName] = useState<string>('');

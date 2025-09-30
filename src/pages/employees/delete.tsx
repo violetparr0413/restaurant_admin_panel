@@ -57,11 +57,39 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     {USER_ROLE[row?.role]}
                 </TableCell>
                 <TableCell>
+                    {row?.update_stock_allow ? (
+                        <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                        <CloseIcon color="error" fontSize="small" />
+                    )}
+                </TableCell>
+                <TableCell>
                     {row?.purchase_allow ? (
                         <CheckIcon color="success" fontSize="small" />
                     ) : (
                         <CloseIcon color="error" fontSize="small" />
                     )}
+                </TableCell>
+                <TableCell>
+                    {row?.receive_allow ? (
+                        <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                        <CloseIcon color="error" fontSize="small" />
+                    )}
+                </TableCell>
+                <TableCell>
+                    {row?.role === 'COUNTER' ? row?.report_allow ? (
+                        <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                        <CloseIcon color="error" fontSize="small" />
+                    ) : (<></>)}
+                </TableCell>
+                <TableCell>
+                    {row?.role === 'WAITSTAFF' ? row?.report_allow ? (
+                        <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                        <CloseIcon color="error" fontSize="small" />
+                    ) : (<></>)}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

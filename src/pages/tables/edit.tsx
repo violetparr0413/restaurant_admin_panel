@@ -14,15 +14,6 @@ import { Employee } from '@/utils/info';
 import api, { convertDateTime } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type EditPanelProps = {
     row: Employee;
@@ -35,6 +26,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const { t } = useTranslation('common')
 
     const [name, setName] = useState<string>(row?.name);
+    const [numOfPeople, setNumOfPeople] = useState<number>(row?.num_of_people || 0);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -46,6 +38,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
 
             formData.append('name', name);
             formData.append('table_order', row?.table_order.toString());
+            formData.append('num_of_people', numOfPeople.toString());
             formData.append('role', 'TABLE');
 
             api.post(`/employee/${row?.employee_id}`, formData)
@@ -82,6 +75,17 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
+                        size="small"
+                        label={t('name')}
+                    />
+                </TableCell>
+                <TableCell>
+                    <TextField
+                        value={numOfPeople}
+                        onChange={(e) => setNumOfPeople(Number(e.target.value))}
+                        placeholder={t('number_of_people')}
+                        label={t('number_of_people')}
+                        type="number"
                         size="small"
                     />
                 </TableCell>

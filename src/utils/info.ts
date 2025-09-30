@@ -9,12 +9,17 @@ export interface User {
 export interface Employee {
     employee_id: number;
     name: string;
+    num_of_people: number;
     password: string;
     role: string;
     table_order: number;
     is_logged_in: boolean;
     created_at: string;
     purchase_allow: number;
+    receive_allow: number;
+    update_stock_allow: number;
+    report_allow: number;
+    dish_allow: number;
 }
 
 export interface Category {
@@ -60,6 +65,13 @@ export interface Dish {
     dish_available: number;
     created_at: string;
     ingredients: Ingredient[];
+    extra_setting: string;
+}
+
+export interface Attribute {
+    name: string;
+    extra_price: number;
+    is_required: number;
 }
 
 export interface Ingredient {
@@ -222,8 +234,10 @@ export interface Inventory {
     inventory_id: number;
     name: string;
     current_stock: number;
+    request_amount: number;
     unit_id: number;
     unit: InventoryUnit;
+    remark: string;
     created_at: string;
 }
 
@@ -234,6 +248,30 @@ export interface ReportInventory {
     salesConsumption: number;
     theoreticalBalance: number;
     actualStock: number;
+    stock: number;
     difference: number;
     remark: string;
+}
+
+export interface ReportDifference {
+    inventory: Inventory;
+    difference_percent: object;
+}
+
+export interface PurchaseHistory {
+    history_id: number;
+    inventory_id: number;
+    user_id: number;
+    amount: number;
+    action: string;
+    created_at: string;
+    employee_id: number;
+    supplier_id: number;
+    order_id: number;
+    inventory: Inventory;
+    user: User;
+    employee: Employee;
+    supplier: Supplier;
+    photo: string;
+    request_amount: number;
 }

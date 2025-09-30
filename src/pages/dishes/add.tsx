@@ -77,51 +77,73 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                 required: true,
                 placeholder: "0",
             }
+        }
+    ]
+
+    type SubRow = { inventory_id: number; quantity: number }
+
+    const [cols, setCols] = useState<MiniTableColumn[]>(initCols);
+    const [rows, setRows] = useState<SubRow[]>([]);
+
+    function handleRowsChange(newRows: SubRow[]) {
+        setRows(newRows.map((row) => ({
+            inventory_id: row.inventory_id,
+            quantity: row.quantity
+        })))
+    }
+
+    const initAttributeCols: MiniTableColumn[] = [
+        {
+            key: "name", label: t('name'), width: "10ch", input: {
+                type: "text",
+                required: true,
+            }
         },
         {
-            key: "unit", label: t('unit'), width: "10ch", input: {
-                disabled: true
+            key: "extra_price", label: t('extra_price'), width: "10ch", input: {
+                type: "number",
+                required: true,
+                placeholder: "0",
+            }
+        },
+        {
+            key: "is_required", label: t('is_required'), width: "10ch", input: {
+                type: "select",
+                required: true,
+                options: [
+                    {label: t('required'), value: 0}, 
+                    {label: t('optional'), value: 1}
+                ],
+                placeholder: t('select')
             }
         }
     ]
 
-    const  [unitNames, setUnitNames] = useState<{inventory_id: number, unit_name: string}[]>([])
+    type SubRow2 = { name: string; extra_price: number, is_required: number }
 
-    type SubRow = { inventory_id: number; quantity: number; unit: string }
+    const [cols2, setCols2] = useState<MiniTableColumn[]>(initAttributeCols);
+    const [rows2, setRows2] = useState<SubRow2[]>([]);
 
-    const [cols, setCols] = useState<MiniTableColumn[]>(initCols);
-
-    const [ingredients, setIngredients] = useState<{ inventory_id: number; quantity: number }[]>([]);
-    const [rows, setRows] = useState<{ inventory_id: number; quantity: number; unit: string }[]>([]);
+    function handleRows2Change(newRows: SubRow2[]) {
+        setRows2(newRows.map((row) => ({
+            name: row.name,
+            extra_price: Number(row.extra_price),
+            is_required: Number(row.is_required)
+        })))
+    }
 
     const getInventories = () => {
         api.get('/inventory') // your server endpoint
             .then(res => {
                 initCols[0].input.options = res.data.map((inv: Inventory) => ({
-                    label: inv.name,
+                    label: `${inv.name} (${inv.unit?.unit_name})`,
                     value: inv.inventory_id
                 }))
-                setUnitNames(res.data.map((inv: Inventory) => ({
-                    inventory_id: inv.inventory_id, 
-                    unit_name: inv.unit?.unit_name || ''
-                })))
                 setCols(initCols)
                 // setInventories(res.data)
             }).catch(error => {
                 console.error(t('unexpected_error'), error);
             });
-    }
-
-    function handleRowsChange(newRows: SubRow[]) {
-        setIngredients(newRows.map((row) => ({
-            inventory_id: row.inventory_id,
-            quantity: row.quantity
-        })))
-        setRows(newRows.map((row) => ({
-            inventory_id: row.inventory_id,
-            quantity: row.quantity,
-            unit: unitNames.find(x => x.inventory_id === Number(row.inventory_id))?.unit_name || ''
-        })))
     }
 
     const getCategoryData = () => {
@@ -197,7 +219,9 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             // (taxPrice !== null) && formData.append('tax_price', taxPrice.toString());
             (available !== null) && formData.append('dish_available', available ? '1' : '0');
             printerIds && formData.append('printer_ids', JSON.stringify(printerIds));
-            ingredients && formData.append('ingredient', JSON.stringify(ingredients))
+            rows && formData.append('ingredient', JSON.stringify(rows))
+            rows2 && formData.append('extra_setting', JSON.stringify(rows2))
+            console.log(rows2)
 
             uploader.post('/dish', formData)
                 .then(res => onSave(res.data))
@@ -395,6 +419,18 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                             columns={cols}
                                             value={rows}
                                             onChange={handleRowsChange}
+                                            dense
+                                            maxHeight={128}
+                                            addLabel="Add detail"
+                                            showIndex={false}
+                                        // className="my-mini-table"  // optional hook
+                                        />
+                                    </Grid>
+                                    <Grid size={{ xs: 12, sm: 12 }}>
+                                        <MiniTable
+                                            columns={cols2}
+                                            value={rows2}
+                                            onChange={handleRows2Change}
                                             dense
                                             maxHeight={128}
                                             addLabel="Add detail"

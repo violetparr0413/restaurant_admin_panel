@@ -132,9 +132,9 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             .then((res) => {
                 setServices(res.data.map((s: Service) => ({
                     id: s.service_id,
-                    name: locale === 'en' ? s.service_en_name :
-                        locale === 'zh' ? s.service_zh_name :
-                            locale === 'ko' ? s.service_ko_name :
+                    name: locale === 'en' ? s.service_en_name || s.service_name :
+                        locale === 'zh' ? s.service_zh_name || s.service_name :
+                            locale === 'ko' ? s.service_ko_name || s.service_name :
                                 s.service_name,
                     qty: 0,
                 })));
@@ -255,6 +255,13 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
         getBrandInfo();
         getIncartOrder();
         getOrderedOrder();
+        const interval = setInterval(() => {
+            getIncartOrder();
+            getOrderedOrder();
+        }, 5000);
+
+        // Cleanup on unmount
+        return () => clearInterval(interval);
     }, [getDish, getBrandInfo, getOrderedOrder, getIncartOrder]);
 
     // -------- Cart helpers
@@ -421,6 +428,22 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             flexDirection: "column",
         } as const;
 
+    const getYouTubeId = (url?: string | null) => {
+        if (!url) return null;
+        try {
+            const u = new URL(url);
+            if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+            if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+            if (u.searchParams.get("v")) return u.searchParams.get("v");
+            const segs = u.pathname.split("/");
+            const idx = segs.indexOf("embed");
+            if (idx !== -1 && segs[idx + 1]) return segs[idx + 1];
+        } catch { }
+        return null;
+    };
+
+    const youtubeId = getYouTubeId(dishDrawer.dish?.youtube_url);
+
     return (
         <ClientUIContext.Provider value={value}>
             {props.children}
@@ -432,22 +455,35 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                 PaperProps={{ sx: paperSx }}
             >
                 <TopBar isRed={false} title={t('dish_details')} onClose={() => setDishDrawer(p => ({ ...p, open: false }))} />
-
-                <Box sx={{
+                {youtubeId ? (<Box
+                    component="iframe"
+                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&playsinline=1&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0`}
+                    title="Dish video"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen={false}
+                    sx={{
+                        flexShrink: 0,
+                        mt: 2, mb: 2,
+                        height: 250,
+                        borderRadius: 2,
+                        pointerEvents: "none",   // non-interactive (no play UI)
+                    }}
+                />) : (<Box sx={{
                     flexShrink: 0,
                     mt: 2, mb: 2,
                     height: 250,
                     borderRadius: 2,
-                    backgroundImage: `url("${backendUrl}/${dishDrawer.dish?.dish_image ?? ""}")`,
+                    backgroundImage: youtubeId
+                        ? "none"
+                        : `url("${backendUrl}/${dishDrawer.dish?.dish_image ?? ""}")`,
                     backgroundSize: "cover",
                     backgroundPosition: "center"
-                }} />
-
+                }} />)}
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Typography variant="h5" fontWeight={700}>{
-                        locale === 'en' ? dishDrawer.dish?.dish_en_name :
-                            locale === 'zh' ? dishDrawer.dish?.dish_zh_name :
-                                locale === 'ko' ? dishDrawer.dish?.dish_ko_name :
+                        locale === 'en' ? dishDrawer.dish?.dish_en_name || dishDrawer.dish?.dish_name :
+                            locale === 'zh' ? dishDrawer.dish?.dish_zh_name || dishDrawer.dish?.dish_name :
+                                locale === 'ko' ? dishDrawer.dish?.dish_ko_name || dishDrawer.dish?.dish_name :
                                     dishDrawer.dish?.dish_name
                     }</Typography>
                     <Typography variant="h5" fontWeight={700}>{formatJPY(dishDrawer.dish?.dish_price ?? 0)}</Typography>
@@ -488,7 +524,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             </Drawer>
 
             <Drawer anchor={isMobile ? "bottom" : "right"} open={cartOpen} onClose={() => setCartOpen(false)} PaperProps={{ sx: paperSx }}>
-                <TopBar isRed={true} title={t('my_cart')} onClose={() => setCartOpen(false)} right={<Chip label={`Total ${formatJPY(cartTotal)}`} sx={{ bgcolor: "#ffc83d" }} />} />
+                <TopBar isRed={false} title={t('my_cart')} onClose={() => setCartOpen(false)} right={<Chip label={`Total ${formatJPY(cartTotal)}`} sx={{ bgcolor: "#ffc83d" }} />} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
                     {cart.length === 0 ? (
                         <Box sx={{ py: 6, textAlign: "center" }}>
@@ -507,15 +543,15 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                                 }>
                                     <ListItemAvatar>
                                         <Avatar variant="rounded" src={`${backendUrl}/${ci.dish?.dish_image ?? ""}`} alt={
-                                            locale === 'en' ? ci.dish?.dish_en_name :
-                                                locale === 'zh' ? ci.dish?.dish_zh_name :
-                                                    locale === 'ko' ? ci.dish?.dish_ko_name :
+                                            locale === 'en' ? ci.dish?.dish_en_name || ci.dish?.dish_name :
+                                                locale === 'zh' ? ci.dish?.dish_zh_name || ci.dish?.dish_name :
+                                                    locale === 'ko' ? ci.dish?.dish_ko_name || ci.dish?.dish_name :
                                                         ci.dish?.dish_name
                                         } />
                                     </ListItemAvatar>
-                                    <ListItemText primary={locale === 'en' ? ci.dish?.dish_en_name :
-                                        locale === 'zh' ? ci.dish?.dish_zh_name :
-                                            locale === 'ko' ? ci.dish?.dish_ko_name :
+                                    <ListItemText primary={locale === 'en' ? ci.dish?.dish_en_name || ci.dish?.dish_name :
+                                        locale === 'zh' ? ci.dish?.dish_zh_name || ci.dish?.dish_name :
+                                            locale === 'ko' ? ci.dish?.dish_ko_name || ci.dish?.dish_name :
                                                 ci.dish?.dish_name} secondary={formatJPY(ci.dish.dish_price)} />
                                 </ListItem>
                             ))}
@@ -535,7 +571,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             </Drawer>
 
             <Drawer anchor={isMobile ? "bottom" : "right"} open={serviceOpen} onClose={() => setServiceOpen(false)} PaperProps={{ sx: paperSx }}>
-                <TopBar isRed={true} title={t('call_service')} onClose={() => setServiceOpen(false)} />
+                <TopBar isRed={false} title={t('call_service')} onClose={() => setServiceOpen(false)} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
                     <List>
                         {services.map(s => (
@@ -561,7 +597,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
 
             {/* Order History Drawer */}
             <Drawer anchor={isMobile ? "bottom" : "right"} open={historyOpen} onClose={() => setHistoryOpen(false)} PaperProps={{ sx: paperSx }}>
-                <TopBar isRed={true} title={t('order_history')} onClose={() => setHistoryOpen(false)} />
+                <TopBar isRed={false} title={t('order_history')} onClose={() => setHistoryOpen(false)} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
                     {orderHistory.length === 0 ? (
                         <Box sx={{ py: 6, textAlign: "center" }}>
@@ -598,9 +634,9 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                                                                 color="text.secondary"
                                                                 sx={{ whiteSpace: "normal", wordBreak: "break-word" }}
                                                             >
-                                                                {locale === 'en' ? ci.dish?.dish_en_name :
-                                                                    locale === 'zh' ? ci.dish?.dish_zh_name :
-                                                                        locale === 'ko' ? ci.dish?.dish_ko_name :
+                                                                {locale === 'en' ? ci.dish?.dish_en_name || ci.dish?.dish_name :
+                                                                    locale === 'zh' ? ci.dish?.dish_zh_name || ci.dish?.dish_name :
+                                                                        locale === 'ko' ? ci.dish?.dish_ko_name || ci.dish?.dish_name :
                                                                             ci.dish?.dish_name} × {ci.qty} — {formatJPY(ci.dish.dish_price * ci.qty)}
                                                             </Typography>
                                                         ))}

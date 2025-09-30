@@ -63,8 +63,13 @@ const DeletePanel: React.FC<DeletePanelProps> = ({ row, onBack, onDelete }) => {
                     {row?.current_stock}
                 </TableCell>
                 <TableCell>
+                    {row?.request_amount}
+                </TableCell>
+                <TableCell>
                     {row?.unit?.unit_name}
                 </TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
                 <TableCell>
                     <IconButton
                         aria-label="delete"

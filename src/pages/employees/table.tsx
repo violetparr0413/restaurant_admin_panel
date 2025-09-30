@@ -27,6 +27,7 @@ import { Employee } from '../../utils/info';
 import AddPanel from './add';
 import EditPanel from './edit';
 import DeletePanel from './delete';
+import LogoutPanel from './logout';
 
 import { useTranslation } from 'next-i18next';
 import api, { convertDateTime } from '@/utils/http_helper';
@@ -214,24 +215,9 @@ export default function Page({ rows, info, error }: TableProps) {
     }
 
     const handleLogoutClick = (item: Employee) => {
-        const form = new FormData();
-
-        form.append('employee_id', item?.employee_id.toString());
-        form.append('is_logged_in', '0');
-
-        api.post(`/change-logged-in`, form)
-            .then(res => {
-                rowsData?.find(x => x.employee_id === res.data.employee?.employee_id) ?
-                    setRows(rowsData => rowsData?.map(x => x.employee_id === res.data.employee?.employee_id ? res.data.employee : x))
-                    : setRows([...rowsData, res.data.employee])
-            })
-            .catch(error => {
-                if (error.response && error.response.status === 422) {
-                    console.log(error.response.data);
-                } else {
-                    console.error(t('unexpected_error'), error);
-                }
-            })
+        info('')
+        setEditItem(item);
+        setView('logout');
     };
 
     return (
@@ -239,10 +225,14 @@ export default function Page({ rows, info, error }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell sx={{ width: 320 }}>{t('name')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 300 }}>{t('name')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>{t('role')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 160 }}>{t('allow_purchase')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 120 }}>{t('allow_update_stock')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 120 }}>{t('allow_purchase')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 120 }}>{t('allow_receive')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 120 }}>{t('allow_report')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 120 }}>{t('allow_edit_dishes')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 180 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 240 }}>
                             <IconButton aria-label="add"
                                 color="info"
@@ -273,6 +263,12 @@ export default function Page({ rows, info, error }: TableProps) {
                                 onBack={handleBackClick}
                                 onDelete={handleDeleteReq}
                             />
+                        ) : view === 'logout' && editItem?.employee_id === row?.employee_id ? (
+                            <LogoutPanel
+                                row={row}
+                                onBack={handleBackClick}
+                                onConfirm={handleSaveClick}
+                            />
                         ) : (
                             <TableRow key={row?.employee_id}>
                                 <TableCell component="th" scope="row">
@@ -282,11 +278,39 @@ export default function Page({ rows, info, error }: TableProps) {
                                     {USER_ROLE[row?.role]}
                                 </TableCell>
                                 <TableCell>
+                                    {row?.update_stock_allow ? (
+                                        <CheckIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CloseIcon color="error" fontSize="small" />
+                                    )}
+                                </TableCell>
+                                <TableCell>
                                     {row?.purchase_allow ? (
                                         <CheckIcon color="success" fontSize="small" />
                                     ) : (
                                         <CloseIcon color="error" fontSize="small" />
                                     )}
+                                </TableCell>
+                                <TableCell>
+                                    {row?.receive_allow ? (
+                                        <CheckIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CloseIcon color="error" fontSize="small" />
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {row?.role === 'COUNTER' ? row?.report_allow ? (
+                                        <CheckIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CloseIcon color="error" fontSize="small" />
+                                    ) : (<></>)}
+                                </TableCell>
+                                <TableCell>
+                                    {row?.role === 'WAITSTAFF' ? row?.dish_allow ? (
+                                        <CheckIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CloseIcon color="error" fontSize="small" />
+                                    ) : (<></>)}
                                 </TableCell>
                                 <TableCell align="right">
                                     {convertDateTime(row?.created_at)}
@@ -339,7 +363,7 @@ export default function Page({ rows, info, error }: TableProps) {
                     ))}
                     {emptyRows > 0 && (
                         <TableRow style={{ height: 53 * emptyRows }}>
-                            <TableCell colSpan={5} />
+                            <TableCell colSpan={9} />
                         </TableRow>
                     )}
                 </TableBody>
@@ -347,7 +371,7 @@ export default function Page({ rows, info, error }: TableProps) {
                     <TableRow>
                         <TablePagination
                             rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                            colSpan={5}
+                            colSpan={9}
                             count={rowsData?.length}
                             rowsPerPage={rowsPerPage}
                             page={page}

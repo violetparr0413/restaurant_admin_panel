@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 
@@ -24,6 +24,11 @@ export default function SelectLanguage() {
       locale: selectedLanguage,
     });
   };
+  useEffect(() => {
+    if(localStorage.getItem('guest_id')){
+      router.push("/client/start-ordering");
+    }
+  }, [router])
 
   function handleClickLang(lng: string) {
     setSelectedLanguage(lng);
@@ -42,7 +47,7 @@ export default function SelectLanguage() {
         <link rel="icon" href="/logo.ico" />
       </Head>
       <Box className="flex items-center justify-center w-[100vw] h-[100vh]">
-        <Box className="rounded-lg border-2 border-black p-5 text-center">
+        <Box className="rounded-lg border-2 border-black p-5 text-center w-9/10">
           <Typography variant="h1" className="!text-3xl !mb-5">
             {t("select_language")}
           </Typography>

@@ -119,7 +119,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
                         >
                             <MenuItem value="" disabled>{t('select')}</MenuItem>
                             {Object.entries(PRINTER_POSITION)?.map(([key, value]) => (
-                                <MenuItem value={key} disabled={exist ? key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
+                                // <MenuItem value={key} disabled={exist ? key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
+                                <MenuItem value={key}>{value}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>

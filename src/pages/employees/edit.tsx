@@ -40,6 +40,10 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const [password, setPassword] = useState<string>('');
     const [role, setRole] = useState<string>(row?.role);
     const [allowPurchase, setAllowPurchase] = useState<boolean>(row?.purchase_allow ? true : false);
+    const [allowReceive, setAllowReceive] = useState<boolean>(row?.receive_allow ? true : false);
+    const [allowUpdateStock, setAllowUpdateStock] = useState<boolean>(row?.update_stock_allow ? true : false);
+    const [allowReport, setAllowReport] = useState<boolean>(row?.report_allow ? true : false);
+    const [allowEditAttributes, setAllowEditAttributes] = useState<boolean>(row?.dish_allow ? true : false);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -53,6 +57,10 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
             password && formData.append('password', password);
             formData.append('role', role);
             (allowPurchase !== null) && formData.append('purchase_allow', allowPurchase ? '1' : '0');
+            (allowReceive !== null) && formData.append('receive_allow', allowReceive ? '1' : '0');
+            (allowUpdateStock !== null) && formData.append('update_stock_allow', allowUpdateStock ? '1' : '0');
+            (role === 'COUNTER' && allowReport !== null) && formData.append('report_allow', allowReport ? '1' : '0');
+            (role === 'WAITSTAFF' && allowEditAttributes !== null) && formData.append('dish_allow', allowEditAttributes ? '1' : '0');
 
             api.post(`/employee/${row?.employee_id}`, formData)
                 .then(res => onSave(res.data))
@@ -78,7 +86,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         <>
             {errorMessage &&
                 <TableRow>
-                    <TableCell colSpan={3} sx={{ border: 0 }}>
+                    <TableCell colSpan={5} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>}
@@ -111,17 +119,59 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     </Select>
                 </TableCell>
                 <TableCell>
-                    {role === 'COUNTER' && (
-                        <FormControl component="fieldset" variant="standard">
-                            <FormControlLabel
-                                control={
-                                    <Switch checked={allowPurchase} onChange={(e) => setAllowPurchase(e.target.checked)} name="gilad" />
-                                }
-                                sx={{ mt: 1, ml: 1 }}
-                                label={t('allow_purchase')}
-                            />
-                        </FormControl>
-                    )}
+                    <FormControl component="fieldset" variant="standard">
+                        <FormControlLabel
+                            control={
+                                <Switch checked={allowUpdateStock} onChange={(e) => setAllowUpdateStock(e.target.checked)} name="gilad" />
+                            }
+                            sx={{ mt: 1 }}
+                            label={t('allow_update_stock')}
+                        />
+                    </FormControl>
+                </TableCell>
+                <TableCell>
+                    <FormControl component="fieldset" variant="standard">
+                        <FormControlLabel
+                            control={
+                                <Switch checked={allowPurchase} onChange={(e) => setAllowPurchase(e.target.checked)} name="gilad" />
+                            }
+                            sx={{ mt: 1 }}
+                            label={t('allow_purchase')}
+                        />
+                    </FormControl>
+                </TableCell>
+                <TableCell>
+                    <FormControl component="fieldset" variant="standard">
+                        <FormControlLabel
+                            control={
+                                <Switch checked={allowReceive} onChange={(e) => setAllowReceive(e.target.checked)} name="gilad" />
+                            }
+                            sx={{ mt: 1 }}
+                            label={t('allow_receive')}
+                        />
+                    </FormControl>
+                </TableCell>
+                <TableCell>
+                    {role === 'COUNTER' && (<FormControl component="fieldset" variant="standard">
+                        <FormControlLabel
+                            control={
+                                <Switch checked={allowReport} onChange={(e) => setAllowReport(e.target.checked)} name="gilad" />
+                            }
+                            sx={{ mt: 1 }}
+                            label={t('allow_report')}
+                        />
+                    </FormControl>)}
+                </TableCell>
+                <TableCell>
+                    {role === 'WAITSTAFF' && (<FormControl component="fieldset" variant="standard">
+                        <FormControlLabel
+                            control={
+                                <Switch checked={allowEditAttributes} onChange={(e) => setAllowEditAttributes(e.target.checked)} name="gilad" />
+                            }
+                            sx={{ mt: 1 }}
+                            label={t('allow_edit_dishes')}
+                        />
+                    </FormControl>)}
                 </TableCell>
                 <TableCell align="right">
                     {convertDateTime(row?.created_at)}

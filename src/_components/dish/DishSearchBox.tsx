@@ -106,7 +106,7 @@ const DishSearchBox: React.FC<ParamProps> = ({ refresh }) => {
                     fontSize: '0.875rem',
                 }}
             >
-                {t('parent_category')}
+                {t('dishes')}
             </Typography>
             <Grid container spacing={2} alignItems="center">
                 {errorMessage && (

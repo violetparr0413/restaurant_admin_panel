@@ -1,67 +1,68 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, TextField, Grid, IconButton, Typography, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { Statistics } from '@/utils/info';
+import { useRouter } from 'next/router';
 
 type ParamProps = {
-  refresh: (data: Statistics) => void;
+  headers: (datas: any[]) => void;
+  refresh: (datas: any[]) => void;
+  url: string;
 };
 
-const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
+const today = getCurrentDate();
+const monthago = get1MonthAgo()
+
+const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
 
   const { t } = useTranslation('common')
-
-  const today = getCurrentDate()
-  const monthago = get1MonthAgo()
 
   const [fromDate, setFromDate] = React.useState(monthago);
   const [toDate, setToDate] = React.useState(today);
 
   const [errorMessage, setErrorMessage] = React.useState('');
 
+  const router = useRouter();
+  const { locale } = router;
+
   const handleSearch = React.useCallback(() => {
     if (fromDate && toDate) {
+      setErrorMessage('');
+
       const formData = new FormData();
 
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      formData.append('from', convertDateTime1(fromDate));
+      formData.append('to', convertDateTime2(toDate));
 
-      api.post('/get-statistics', formData)
-        // .then(res => refresh(res.data))
+      api.post(url, formData)
         .then(res => {
-          refresh(res.data)
-          console.log(res.data)
+            // console.log(res.data);
+            headers(res.data.input_dates)
+            refresh(res.data.inventoryDifference)
         })
         .catch(error => {
-          if (error.response && error.response.status === 422) {
-            // Validation error from server
+          if (error?.response?.status === 422) {
             console.log(error.response.data);
-            // setErrorMessage(error.response.data.message);
             setErrorMessage(t('something_went_wrong'));
           } else {
-            // Other errors
             console.error(t('unexpected_error'), error);
             setErrorMessage(t('something_went_wrong'));
           }
-        })
+        });
     } else if (!fromDate) {
       setErrorMessage(t('from_date_field_required'));
     } else if (!toDate) {
       setErrorMessage(t('to_date_field_required'));
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate]); // <— include deps
 
-  useEffect(() => {
-    handleSearch()
-
-    const interval = setInterval(() => {
-      handleSearch();
-    }, 10000);
-
-    return () => clearInterval(interval);
+  React.useEffect(() => {
+    handleSearch();
+    // and poll every 5s with the *current* filters
+    const id = setInterval(handleSearch, 5000);
+    return () => clearInterval(id);
   }, [handleSearch]);
 
   return (
@@ -79,7 +80,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
           fontSize: '0.875rem',
         }}
       >
-        {t('duration')}
+        {t('data_filter')}
       </Typography>
       <Grid container spacing={2} alignItems="center">
         {errorMessage && (
@@ -87,7 +88,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 2 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <TextField
             label={t('from_date')}
             type="date"
@@ -99,7 +100,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
             onChange={(e) => setFromDate(e.target.value)}
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 2 }}>
+        <Grid size={{ xs: 12, sm: 3 }}>
           <TextField
             label={t('to_date')}
             type="date"

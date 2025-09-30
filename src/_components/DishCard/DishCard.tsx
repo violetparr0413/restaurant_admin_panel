@@ -30,11 +30,11 @@ export default function DishCard({
     <Box>
       <Paper
         elevation={4}
-        className="w-full max-w-sm !rounded-xl overflow-hidden border-none pb-2 box-border !shadow-[0_1px_4px_0_rgba(0,0,0,0.2)]"
+        className="w-full max-w-sm !rounded-lg overflow-hidden border-none pb-2 box-border !shadow-[0_1px_4px_0_rgba(0,0,0,0.2)]"
         onClick={() => openDish(dish)}
       >
         <Box
-          className="relative w-full rounded-t-xl bg-cover bg-center overflow-hidden md:h-[200px] h-[100px]"
+          className="relative w-full rounded-t-lg bg-cover bg-center overflow-hidden md:h-[190px] h-[90px]"
           sx={{
             backgroundImage: `url("${backendUrl}/${dish["dish_image"]}")`,
           }}

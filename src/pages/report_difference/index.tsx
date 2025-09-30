@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import Table from './table';
-import { ReportInventory } from '../../utils/info';
+import { ReportDifference } from '../../utils/info';
 
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Box } from '@mui/material';
-import SearchBox from '@/_components/report/SearchBox';
+import SearchBox from '@/_components/report/DifferenceSearchBox';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -16,12 +16,13 @@ export async function getStaticProps({ locale }: { locale: string }) {
 
 export default function Page() {
 
-    const [data, setData] = useState<ReportInventory[]>([]);
+    const [headers, setHeaders] = useState<string[]>([]);
+    const [data, setData] = useState<ReportDifference[]>([]);
 
     return (
         <Box>
-            <SearchBox refresh={setData} url='/report-inventory' />
-            <Table rows={data} />
+            <SearchBox headers={setHeaders} refresh={setData} url='/get-inventory-difference' />
+            <Table headers={headers} rows={data} />
         </Box>
     )
 }

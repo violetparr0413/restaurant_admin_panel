@@ -69,9 +69,9 @@ const PurchasePanel: React.FC<ParamProps> = ({ row, onBack }) => {
             const formData = new FormData();
 
             formData.append('inventory_id', row?.inventory_id.toString());
-            formData.append('amount', amount.toString());
+            formData.append('request_amount', amount.toString());
             formData.append('supplier_id', supplierId.toString());
-            (sendMode !== null) && formData.append('by_email', sendMode ? '0' : '1');
+            (sendMode !== null) && formData.append('by_email', sendMode.toString());
 
             api.post(`/purchase-inventory`, formData)
                 .then(res => {

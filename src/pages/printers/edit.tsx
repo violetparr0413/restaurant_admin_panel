@@ -122,7 +122,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => 
                         >
                             <MenuItem value="" disabled>{t('select')}</MenuItem>
                             {Object.entries(PRINTER_POSITION)?.map(([key, value]) => (
-                                <MenuItem value={key} disabled={exist ? position === 'COUNTER' ? false : key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
+                                // <MenuItem value={key} disabled={exist ? position === 'COUNTER' ? false : key === 'COUNTER' ? true : false : false}>{value}</MenuItem>
+                                <MenuItem value={key}>{value}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>

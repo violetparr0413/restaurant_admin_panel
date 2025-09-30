@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { appWithTranslation } from 'next-i18next';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { Backdrop, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
 import createAppTheme from "@/theme/theme";
 import { useRouter } from "next/router";
 import Layout from "@/_components/Layout/Layout";
@@ -13,6 +13,9 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from "next/head";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import api from "@/utils/http_helper";
+import FileDownload from "@mui/icons-material/FileDownload";
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -32,6 +35,81 @@ interface ISidebarItems {
     label: string;
     url: string;
     childs: ISidebarChildItems[] | null;
+}
+
+function AuthGuard({
+    children,
+    publicRoutes,
+}: {
+    children: React.ReactNode;
+    publicRoutes: string[];
+}) {
+    const router = useRouter();
+    const [ready, setReady] = useState(false);
+
+    const isPublic = useMemo(() => {
+        const p = router.pathname;
+        return publicRoutes.some((r) =>
+            r.endsWith('*') ? p.startsWith(r.slice(0, -1)) : p === r
+        );
+    }, [router.pathname, publicRoutes]);
+
+    const check = useCallback(
+        async (url?: string) => {
+            const path = url
+                ? new URL(url, window.location.origin).pathname
+                : router.pathname;
+
+            const pathIsPublic = publicRoutes.some((r) =>
+                r.endsWith('*') ? path.startsWith(r.slice(0, -1)) : path === r
+            );
+
+            if (pathIsPublic) {
+                setReady(true);
+                return;
+            }
+
+            try {
+                const res = (await api.get('/user')).data;
+                if (res?.status === 'success') {
+                    setReady(true);
+                } else {
+                    setReady(false);
+                    router.replace('/auth/signin');
+                }
+            } catch {
+                setReady(false);
+                router.replace('/auth/signin');
+            }
+        },
+        [router, publicRoutes]
+    );
+
+    useEffect(() => {
+        // initial load
+        check();
+
+        // handle client-side navigations
+        const start = () => setReady(false);
+        const done = (url: string) => check(url);
+
+        router.events.on('routeChangeStart', start);
+        router.events.on('routeChangeComplete', done);
+        return () => {
+            router.events.off('routeChangeStart', start);
+            router.events.off('routeChangeComplete', done);
+        };
+    }, [check, router.events]);
+
+    if (!ready) {
+        return (
+            <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }} open>
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        );
+    }
+
+    return <>{children}</>;
 }
 
 function App({ Component, pageProps }: AppProps) {
@@ -133,7 +211,7 @@ function App({ Component, pageProps }: AppProps) {
             url: null,
             childs: [
                 {
-                    label: t('inventory_unit'),
+                    label: t('product_unit'),
                     url: '/inventory_unit',
                 },
                 {
@@ -141,15 +219,29 @@ function App({ Component, pageProps }: AppProps) {
                     url: '/supplier',
                 },
                 {
-                    label: t('inventory'),
+                    label: t('raw_material'),
                     url: '/inventory',
                 },
                 {
-                    label: t('report_inventory'),
+                    label: t('inventory_report'),
                     url: '/report_inventory',
                 },
+                {
+                    label: t('difference_report'),
+                    url: '/report_difference',
+                },
+                {
+                    label: t('purchase_history'),
+                    url: '/purchase_history',
+                },
             ],
-        }
+        },
+        {
+            icon: <FileDownload />,
+            label: t('downloads'),
+            url: '/downloads',
+            childs: null,
+        },
     ];
 
     const paths = [
@@ -167,31 +259,44 @@ function App({ Component, pageProps }: AppProps) {
         { url: '/payments', label: t('payment_methods') },
         { url: '/tax_rate', label: t('tax_rates') },
         { url: '/invoice', label: t('invoice_log') },
-        { url: '/inventory_unit', label: t('inventory_unit') },
+        { url: '/inventory_unit', label: t('product_unit') },
         { url: '/supplier', label: t('supplier') },
         { url: '/inventory', label: t('inventory') },
-        { url: '/report_inventory', label: t('report_inventory') },
+        { url: '/report_inventory', label: t('inventory_report') },
+        { url: '/report_difference', label: t('difference_report') },
+        { url: '/purchase_history', label: t('purchase_history') },
+        { url: '/downloads', label: t('downloads') },
     ]
 
     const { locale = 'ja' } = useRouter();
-
     const theme = createAppTheme(locale);
     const router = useRouter();
-    const excludedRoutes = ['/auth/signin'];
 
-    const isExcluded = router.pathname.startsWith('/client') || excludedRoutes.includes(router.pathname);
+    // Treat these as public (no auth required). You can also support prefixes with '*'.
+    const publicRoutes = ['/', '/auth/signin', '/client*'];
+
+    const isExcluded =
+        router.pathname.startsWith('/client') ||
+        publicRoutes.includes(router.pathname);
 
     return (
         <ThemeProvider theme={theme}>
             <Head>
                 <title>千里香</title>
-                <link rel="icon" href="/logo.ico" /> {/* Your logo or favicon */}
+                <link rel="icon" href="/logo.ico" />
             </Head>
             <CssBaseline />
-            {isExcluded && <Component {...pageProps} />}
-            {!isExcluded && <Layout sidebarItems={sidebarItems} paths={paths}>
-                <Component {...pageProps} />
-            </Layout>}
+
+            {/* Wrap everything with AuthGuard so protected routes don't render until checked */}
+            <AuthGuard publicRoutes={publicRoutes}>
+                {isExcluded ? (
+                    <Component {...pageProps} />
+                ) : (
+                    <Layout sidebarItems={sidebarItems} paths={paths}>
+                        <Component {...pageProps} />
+                    </Layout>
+                )}
+            </AuthGuard>
         </ThemeProvider>
     );
 }

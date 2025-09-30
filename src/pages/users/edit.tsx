@@ -32,7 +32,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
     const USER_ROLE = {
         'ADMIN': t('admin'),
         'WAITSTAFF': t('waitstuff'),
-        'COUNTER': t('counter')
+        'COUNTER': t('counter'),
+        'TABLE': t('table')
     }
 
     const [name, setName] = useState<string>(row?.username);

@@ -65,7 +65,11 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                 .catch(error => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
-                        console.log(error.response.data);
+                        if (error.response.data.message === "The email field must be a valid email address.") {
+                            setErrorMessage(t('email_field_format_not_valid'));
+                        } else if (error.response.data.message === "The supplier name has already been taken.") {
+                            setErrorMessage(t('supplier_name_already_taken'));
+                        }
                         // setErrorMessage(error.response.data.message);
                         setErrorMessage(t('something_went_wrong'));
                     } else {

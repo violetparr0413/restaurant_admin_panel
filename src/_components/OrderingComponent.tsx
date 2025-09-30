@@ -126,14 +126,6 @@ export default function OrderingComponent() {
     <Box className="w-[100vw]">
       <Box className="shadow sticky top-0 z-50">
         <Box className="flex items-center justify-between py-3 px-5  !bg-[white]">
-          <Box>
-            <Image
-              src={backendUrl + logoPath}
-              alt="Logo"
-              width={50}
-              height={50}
-            />
-          </Box>
           <Box className="flex gap-5">
             <Box
               onClick={handleOpen}
@@ -180,6 +172,16 @@ export default function OrderingComponent() {
             <Box onClick={openCallService} sx={{ cursor: "pointer" }}>
               <RoomServiceIcon />
             </Box>
+          </Box>
+          <Box>
+            <Image
+              src={backendUrl + logoPath}
+              alt="Logo"
+              width={50}
+              height={50}
+            />
+          </Box>
+          <Box className="flex gap-5">            
             <Box onClick={openOrderHistory} sx={{ cursor: "pointer" }}>
               {orderCount > 0 ? (
                 <Badge badgeContent={orderCount} color="error">
@@ -212,7 +214,7 @@ export default function OrderingComponent() {
                   <Typography
                     variant="body1"
                     className={
-                      "cursor-pointer py-1 px-3 " +
+                      "cursor-pointer py-1 px-3 !text-xs " +
                       (parentCategory.category_id === category.category_id
                         ? "!text-[#DB0007] border-b-4 border-[#DB0007]"
                         : "!text-black")
@@ -232,7 +234,7 @@ export default function OrderingComponent() {
         {/* Child categories navigation */}
         {parentCategory.children && parentCategory.children.length > 0 && (
           <Box className="!px-5 overflow-x-auto whitespace-nowrap !bg-white">
-            <Swiper spaceBetween={10} slidesPerView="auto" className="!mt-3">
+            <Swiper spaceBetween={10} slidesPerView="auto" className="!mt-0">
               {parentCategory.children.map((category, index) => (
                 <SwiperSlide
                   key={category.category_id}
@@ -241,7 +243,7 @@ export default function OrderingComponent() {
                   <Typography
                     variant="body1"
                     className={
-                      "cursor-pointer py-1 px-3 " +
+                      "cursor-pointer py-1 px-3 !text-xs " +
                       (childCategory.category_id === category.category_id
                         ? "!text-[#DB0007] border-b-4 border-[#DB0007]"
                         : "!text-black")
@@ -285,7 +287,7 @@ export default function OrderingComponent() {
                 {category.dishes.length > 0 ? (
                   <Grid container spacing={2}>
                     {category.dishes.map((dish) => (
-                      <Grid size={{ xs: 6, sm: 6, md: 3 }} key={dish.dish_id}>
+                      <Grid size={{ xs: 6, sm: 6, md: 3 }} key={dish.dish_id} className="p-1">
                         <DishCard
                           dish={dish}
                           currentLocale={currentLocale}

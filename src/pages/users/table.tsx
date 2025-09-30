@@ -130,7 +130,8 @@ export default function Page({ rows }: TableProps) {
     const USER_ROLE = {
         'ADMIN': t('admin'),
         'WAITSTAFF': t('waitstuff'),
-        'COUNTER': t('counter')
+        'COUNTER': t('counter'),
+        'TABLE': t('table')
     }
 
     // Avoid a layout jump when reaching the last page with empty rows.

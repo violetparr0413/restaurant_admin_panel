@@ -14,11 +14,21 @@ export default function ClientUuid() {
       .then((res) => {
         if (res.data.status === "success") {
           if(res.data.message == "valid_token"){
+            localStorage.setItem("token", res.data.access_token || "");
+            localStorage.setItem("employee_id", res.data.employee_id || "");
+            if(res.data.guest_id) {
+              localStorage.setItem("guest_id", res.data.guest_id);
+            } else {
+              localStorage.removeItem('guest_id')
+            }
             router.replace(res.data.url);
           } else {
             localStorage.setItem("token", res.data.access_token || "");
-            localStorage.setItem("employee_id", res.data.employee_id || "");
-            localStorage.setItem("guest_id", res.data.guest_id || "");
+            localStorage.setItem("employee_id", res.data.employee_id || "");if(res.data.guest_id) {
+              localStorage.setItem("guest_id", res.data.guest_id);
+            } else {
+              localStorage.removeItem('guest_id')
+            }
             router.replace("/client");
           }
         } else {

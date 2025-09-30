@@ -15,13 +15,10 @@ import IconButton from '@mui/material/IconButton';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
-import EditIcon from '@mui/icons-material/Edit';
 
-import { ReportInventory } from '../../utils/info';
+import { ReportDifference } from '../../utils/info';
 
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
-import EditPanel from './edit';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -100,22 +97,17 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 }
 
 interface TableProps {
-    rows: ReportInventory[];
+    headers: string[];
+    rows: ReportDifference[];
 }
 
-export default function Page({ rows }: TableProps) {
+export default function Page({ headers, rows }: TableProps) {
     const { t } = useTranslation('common')
 
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const [rowsData, setRows] = React.useState(rows);
-    const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
-    const [editItem, setEditItem] = React.useState<ReportInventory | null>(null);
-
-    const router = useRouter();
-    const { locale } = router;
-
     const [maxHeight, setMaxHeight] = React.useState(0)
 
     React.useEffect(() => {
@@ -144,45 +136,16 @@ export default function Page({ rows }: TableProps) {
         setPage(0);
     };
 
-    const handleEditClick = (item: ReportInventory) => {
-        setEditItem(item);
-        setView('edit');
-    };
-
-    const handleBackClick = () => {
-        setView('hide');
-        setEditItem(null);
-    };
-
-    const handleRemarkUpdated = (id: number, remark: string) => {
-        setRows(prev =>
-            prev.map(r =>
-                r.inventory.inventory_id === id
-                    ? { ...r, inventory: { ...r.inventory, remark } }
-                    : r
-            )
-        );
-        setView('hide');
-        setEditItem(null);
-    };
-
     return (
         <>
             <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
                 <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
-                            <StyledTableCell sx={{ width: 160 }}>{t('ingredient')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }}>{t('unit')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('opening_stock')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('purchase_qty')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('sales_consumption')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('theoretical_balance')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('actual_stock')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('difference')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }} align="right">{t('percent')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 160 }}>{t('remarks')}</StyledTableCell>
-                            <StyledTableCell sx={{ width: 90 }}></StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }}>{t('inventory')}</StyledTableCell>
+                            {(headers.map((day) => (
+                                <StyledTableCell sx={{ width: 90 }} align="right">{day}</StyledTableCell>
+                            )))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -190,60 +153,20 @@ export default function Page({ rows }: TableProps) {
                             ? rowsData?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             : rowsData
                         )?.map((row) => (
-                            view === 'edit' && editItem?.inventory.inventory_id === row?.inventory.inventory_id ? (
-                                <EditPanel
-                                    row={row}
-                                    onSave={handleRemarkUpdated}
-                                    onBack={handleBackClick}
-                                />
-                            ) : (
-                                <TableRow key={row?.inventory.inventory_id}>
-                                    <TableCell component="th" scope="row">
-                                        {row?.inventory.name}
-                                    </TableCell>
-                                    <TableCell>
-                                        {row?.inventory.unit?.unit_name}
-                                    </TableCell>
+                            <TableRow key={row?.inventory.inventory_id}>
+                                <TableCell component="th" scope="row">
+                                    {row?.inventory.name}
+                                </TableCell>
+                                {(headers.map((day) => (
                                     <TableCell align="right">
-                                        {row?.openStock ?? '--'}
+                                        {row?.difference_percent[day] ? Number(row?.difference_percent[day]).toFixed(2) + "%" : "--"}
                                     </TableCell>
-                                    <TableCell align="right">
-                                        {row?.purchasedQty ?? '--'}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {row?.salesConsumption ?? '--'}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {row?.theoreticalBalance ?? '--'}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {row?.actualStock ?? '--'}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {row?.difference ?? '--'}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        {(row?.actualStock && (row?.actualStock > 0)) ? Math.round(row?.difference ?? 0 / row?.actualStock * 100) + '%' : '--'}
-                                    </TableCell>
-                                    <TableCell>
-                                        {row?.inventory.remark}
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            aria-label="edit"
-                                            color="primary"
-                                            onClick={() => handleEditClick(row)}
-                                            disabled={!row?.inventory.inventory_id}
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            )
+                                )))}
+                            </TableRow>
                         ))}
                         {emptyRows > 0 && (
                             <TableRow style={{ height: 53 * emptyRows }}>
-                                <TableCell colSpan={11} />
+                                <TableCell colSpan={headers.length+1} />
                             </TableRow>
                         )}
                     </TableBody>
@@ -251,7 +174,7 @@ export default function Page({ rows }: TableProps) {
                         <TableRow>
                             <TablePagination
                                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                colSpan={11}
+                                colSpan={headers.length+1}
                                 count={rowsData?.length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}

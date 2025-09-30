@@ -3,8 +3,6 @@ import {
     TableRow,
     TableCell,
     TextField,
-    Select,
-    MenuItem,
     Alert,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -14,15 +12,6 @@ import { Employee } from '@/utils/info';
 import api from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 type AddPanelProps = {
     onBack: () => void;
@@ -34,6 +23,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     const { t } = useTranslation('common')
 
     const [name, setName] = useState<string>('');
+    const [numOfPeople, setNumOfPeople] = useState<number>(0);
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -42,6 +32,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             const formData = new FormData();
 
             formData.append('name', name);
+            formData.append('num_of_people', numOfPeople.toString());
             formData.append('role', 'TABLE');
 
             api.post('/employee', formData)
@@ -67,7 +58,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
         <>
             {errorMessage && (
                 <TableRow>
-                    <TableCell colSpan={2} sx={{ border: 0 }}>
+                    <TableCell colSpan={3} sx={{ border: 0 }}>
                         <Alert severity="error">{errorMessage}</Alert>
                     </TableCell>
                 </TableRow>)}
@@ -80,6 +71,16 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
                         label={t('name')}
+                        size="small"
+                    />
+                </TableCell>
+                <TableCell>
+                    <TextField
+                        value={numOfPeople}
+                        onChange={(e) => setNumOfPeople(Number(e.target.value))}
+                        placeholder={t('number_of_people')}
+                        label={t('number_of_people')}
+                        type="number"
                         size="small"
                     />
                 </TableCell>

@@ -14,6 +14,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 import { Statistics } from "@/utils/info";
 import { useTranslation } from 'next-i18next';
+import { useRouter } from "next/router";
 
 type ParamProps = {
     statistics: Statistics;
@@ -23,11 +24,14 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
 
     const { t } = useTranslation('common')
 
+    const router = useRouter();
+    const { locale } = router;
+
     const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
     return (
         <Box sx={{
-            p: 4, 
+            p: 4,
             border: "1px solid #ccc",
             borderRadius: 1
         }}>
@@ -78,7 +82,11 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                                 <TableBody>
                                     {statistics?.groupedOrders?.map((order) => (
                                         <TableRow key={order.dish_id}>
-                                            <TableCell>{order.dish?.dish_name || "N/A"}</TableCell>
+                                            <TableCell>
+                                                {locale === 'en' ? order.dish?.dish_en_name :
+                                                    locale === 'zh' ? order.dish?.dish_zh_name :
+                                                        locale === 'ko' ? order.dish?.dish_ko_name :
+                                                            order.dish?.dish_name || "N/A"}</TableCell>
                                             <TableCell>{order.total_qty}</TableCell>
                                             <TableCell>円 {order.total_value}</TableCell>
                                         </TableRow>
@@ -99,7 +107,10 @@ const Dashboard: React.FC<ParamProps> = ({ statistics }) => {
                                 width={400}
                                 height={300}
                                 data={statistics?.groupedOrders?.map(order => ({
-                                    name: order.dish?.dish_name || "N/A",
+                                    name: locale === 'en' ? order.dish?.dish_en_name :
+                                        locale === 'zh' ? order.dish?.dish_zh_name :
+                                            locale === 'ko' ? order.dish?.dish_ko_name :
+                                                order.dish?.dish_name || "N/A",
                                     value: order.total_value,
                                 }))}
                             >

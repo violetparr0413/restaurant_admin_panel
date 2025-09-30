@@ -1,29 +1,41 @@
 import React from 'react';
-import { Box, Grid, IconButton, Typography, Alert, TextField } from '@mui/material';
+import { Box, Grid, IconButton, Typography, Alert, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import api, { convertDateTimeMin, getCurrentTimeMin } from '@/utils/http_helper';
-
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import api, { convertDateTime1, convertDateTimeMin, getCurrentDate, getCurrentTimeMin } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
-import { Inventory } from '@/utils/info';
-import dayjs, { Dayjs } from 'dayjs';
+import { Inventory, Supplier } from '@/utils/info';
 
 type ParamProps = {
   refresh: (datas: Inventory[]) => void;
+  isShow: boolean;
+  filterSupplier: (number) => void;
+  filterSupplierId: number
 };
 
-const today = getCurrentTimeMin();
+const today = getCurrentDate();
 
-const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
+const SearchBox: React.FC<ParamProps> = ({ refresh, isShow, filterSupplier, filterSupplierId }) => {
 
   const { t } = useTranslation('common')
 
   const [time, setTime] = React.useState(today);
 
   const [errorMessage, setErrorMessage] = React.useState('');
+  const [suppliers, setSuppliers] = React.useState<Supplier[]>([]);
+
+  const getSuppliers = () => {
+    api.get('/supplier') // your server endpoint
+      .then(res => {
+        setSuppliers(res.data)
+      })
+      .catch(error => {
+        if (error.response) {
+          console.error(t('unexpected_error'), error);
+          setErrorMessage(t('something_went_wrong'));
+        }
+      });
+  }
 
   const handleSearch = React.useCallback(() => {
     if (time) {
@@ -31,7 +43,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
       api.get('/inventory', {
         params: {
-          time: convertDateTimeMin(time)
+          time: convertDateTime1(time)
         }
       })
         .then(res => refresh(res.data))
@@ -49,8 +61,12 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
   }, [time]); // <— include deps
 
   React.useEffect(() => {
+    getSuppliers()
+  }, [])
+
+  React.useEffect(() => {
     handleSearch();
-  }, []);
+  }, [handleSearch]);
 
   return (
     <Box sx={{ mb: 2, position: 'relative', border: '2px solid #1ba3e1', borderRadius: 1, p: 2, mt: 2 }}>
@@ -78,7 +94,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
         <Grid size={{ xs: 12, sm: 3 }}>
           <TextField
             label={t('search_time')}
-            type="datetime-local"
+            type="date"
             variant="outlined"
             fullWidth
             size="small"
@@ -87,6 +103,28 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
             onChange={(e) => setTime(e.target.value)}
           />
         </Grid>
+        {
+          isShow && (
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>{t('supplier')}</InputLabel>
+                <Select
+                  label={t('supplier')}
+                  value={filterSupplierId}
+                  onChange={(e) => {
+                    filterSupplier(Number(e.target.value))
+                  }
+                }
+                >
+                  <MenuItem value={0}>{t('all')}</MenuItem>
+                  {suppliers?.map((x) => (
+                    <MenuItem value={x.supplier_id}>{x.supplier_name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )
+        }
         <Grid size={{ xs: "auto" }}>
           <IconButton
             color="primary"

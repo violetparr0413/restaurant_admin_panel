@@ -34,16 +34,7 @@ import EditPanel from './edit';
 import DeletePanel from './delete';
 
 import { useTranslation } from 'next-i18next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import api, { convertDateTime } from '@/utils/http_helper';
-
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
-}
 
 interface TablePaginationActionsProps {
     count: number;
@@ -326,6 +317,7 @@ export default function Page({ rows }: TableProps) {
                         <TableRow>
                             <StyledTableCell sx={{ width: 50 }}></StyledTableCell>
                             <StyledTableCell sx={{ width: 160 }}>{t('name')}</StyledTableCell>
+                            <StyledTableCell sx={{ width: 160 }}>{t('number_of_people')}</StyledTableCell>
                             <StyledTableCell sx={{ width: 160 }} align="right">{t('created_at')}</StyledTableCell>
                             <StyledTableCell sx={{ width: 200 }}>
                                 <IconButton aria-label="add"
@@ -384,6 +376,9 @@ export default function Page({ rows }: TableProps) {
                                                     <TableCell component="th" scope="row">
                                                         {row?.name}
                                                     </TableCell>
+                                                    <TableCell>
+                                                        {row?.num_of_people}
+                                                    </TableCell>
                                                     <TableCell style={{ width: 160 }} align="right">
                                                         {convertDateTime(row?.created_at)}
                                                     </TableCell>
@@ -424,7 +419,7 @@ export default function Page({ rows }: TableProps) {
                                 ))}
                                 {emptyRows > 0 && (
                                     <TableRow style={{ height: 60 * emptyRows }}>
-                                        <TableCell colSpan={4} />
+                                        <TableCell colSpan={5} />
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -434,7 +429,7 @@ export default function Page({ rows }: TableProps) {
                         <TableRow>
                             <TablePagination
                                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                colSpan={4}
+                                colSpan={5}
                                 count={rowsData?.length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}
