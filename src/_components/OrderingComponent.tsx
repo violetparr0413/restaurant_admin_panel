@@ -234,7 +234,7 @@ export default function OrderingComponent() {
         {/* Child categories navigation */}
         {parentCategory.children && parentCategory.children.length > 0 && (
           <Box className="!px-5 overflow-x-auto whitespace-nowrap !bg-white">
-            <Swiper spaceBetween={10} slidesPerView="auto" className="!mt-0">
+            <Swiper spaceBetween={10} slidesPerView="auto" className="!mt-0 !pb-2">
               {parentCategory.children.map((category, index) => (
                 <SwiperSlide
                   key={category.category_id}
@@ -267,7 +267,7 @@ export default function OrderingComponent() {
           <Swiper
             spaceBetween={10}
             slidesPerView={1} // <-- full width slides
-            className="!mt-3"
+            className="!mt-3 !pb-2"
             onSwiper={(swiper) => (childSwiperRef.current = swiper)}
             autoHeight={true}
             onSlideChangeTransitionEnd={(swiper) => {
@@ -280,14 +280,14 @@ export default function OrderingComponent() {
               }
             }}
             initialSlide={childIndex}
-            style={{ width: "calc(100vw - 30px)" }} // make sure swiper takes full viewport width
+            style={{ width: "calc(100vw - 20px)" }} // make sure swiper takes full viewport width
           >
             {parentCategory.children.map((category) => (
               <SwiperSlide key={category.category_id}>
                 {category.dishes.length > 0 ? (
                   <Grid container spacing={2}>
                     {category.dishes.map((dish) => (
-                      <Grid size={{ xs: 6, sm: 6, md: 3 }} key={dish.dish_id} className="p-1">
+                      <Grid size={{ xs: 6, sm: 6, md: 3 }} key={dish.dish_id}>
                         <DishCard
                           dish={dish}
                           currentLocale={currentLocale}

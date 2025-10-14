@@ -8,6 +8,17 @@ import { useTranslation } from 'next-i18next';
 import { Order } from '@/utils/info';
 import { useRouter } from 'next/router';
 
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
+
+// dayjs locale packs
+import 'dayjs/locale/en';
+import 'dayjs/locale/ko';
+import 'dayjs/locale/ja';
+import 'dayjs/locale/zh';
+
 type ParamProps = {
   refresh: (datas: Order[]) => void;
 };
@@ -18,6 +29,7 @@ const monthago = get1MonthAgo()
 const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const { t } = useTranslation('common')
+  const { locale = 'en' } = useRouter();
 
   const ORDER_STATUS = {
     "ORDERED": t('ordered'),
@@ -29,27 +41,27 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
   const [dish, setDish] = React.useState('');
   const [table, setTable] = React.useState('');
   const [status, setStatus] = React.useState('');
-  const [fromDate, setFromDate] = React.useState(monthago);
-  const [toDate, setToDate] = React.useState(today);
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
+  const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
   const [errorMessage, setErrorMessage] = React.useState('');
-
-  const router = useRouter();
-  const { locale } = router;
 
   const handleExport = () => {
     if (fromDate && toDate) {
       setErrorMessage('');
+
+      const fromDateSTR = fromDate.format('YYYY-MM-DD');
+      const toDateSTR = toDate.format('YYYY-MM-DD');
 
       const formData = new FormData();
 
       dish && formData.append('dish', dish);
       table && formData.append('table', table);
       status && status !== 'ALL' && formData.append('order_status', status);
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      formData.append('from_date', convertDateTime1(fromDateSTR));
+      formData.append('to_date', convertDateTime2(toDateSTR));
       formData.append('locale', locale);
-      
+
       api.post(`/download-csv`, formData, {
         responseType: 'blob',                     // <— important
         validateStatus: s => (s >= 200 && s < 300) || s === 422,
@@ -94,13 +106,16 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
     if (fromDate && toDate) {
       setErrorMessage('');
 
+      const fromDateSTR = fromDate.format('YYYY-MM-DD');
+      const toDateSTR = toDate.format('YYYY-MM-DD');
+
       const formData = new FormData();
 
       dish && formData.append('dish', dish);
       table && formData.append('table', table);
       status && status !== 'ALL' && formData.append('order_status', status);
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      formData.append('from_date', convertDateTime1(fromDateSTR));
+      formData.append('to_date', convertDateTime2(toDateSTR));
 
       api.post('/search-order', formData)
         .then(res => refresh(res.data.orders))
@@ -188,28 +203,30 @@ const OrderSearchBox: React.FC<ParamProps> = ({ refresh }) => {
           </FormControl>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('from_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('from_date')}
+              value={fromDate}
+              onChange={(newVal) => setFromDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('to_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('to_date')}
+              value={toDate}
+              onChange={(newVal) => setToDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: "auto" }}>
           <IconButton

@@ -72,42 +72,85 @@ export default function Layer(props: Props) {
         }
     };
 
-    const [openCategory, setOpenCategory] = React.useState(false);
-
-    const handleCategoryClick = () => {
-        setOpenCategory(!openCategory);
-    };
-
+    // Track manual open/close by id
     const [openById, setOpenById] = React.useState<Record<string, boolean>>({});
 
-    const toggle = (id: string) => setOpenById(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggle = (id: string) =>
+        setOpenById(prev => ({ ...prev, [id]: !prev[id] }));
+
+    // Helper: does this item (with children) contain the active route?
+    const routeInItem = React.useCallback(
+        (item: ISidebarItems) => {
+            if (!item.childs || item.childs.length === 0) return false;
+            return item.childs.some(c => router.pathname === c.url);
+        },
+        [router.pathname]
+    );
 
     const drawer = (
         <Box className="bg-dark-nav" sx={{
             color: 'white',
-            height: '100vh',
+            height: '100%',
+            bgcolor: 'inherit',         // inherits from Paper (so no color mismatch)
+            display: 'flex',
+            flexDirection: 'column',
         }}>
             <Toolbar />
             <Divider />
-            <List>
+            <List sx={{
+                flex: 1, overflowY: 'auto', pr: 1,
+                // Firefox
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.35) transparent',
+
+                // Chromium/WebKit
+                '&::-webkit-scrollbar': { width: 8 },
+                '&::-webkit-scrollbar-track': { background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 8,
+                    border: '2px solid transparent',
+                    backgroundClip: 'content-box',
+                },
+                '&:hover::-webkit-scrollbar-thumb': {
+                    backgroundColor: 'rgba(255,255,255,0.35)',
+                },
+            }}>
                 {sidebarItems.map((sidebarItem) => {
-                    const id = sidebarItem.label; // ensure this is unique; prefer a real id
-                    const isOpen = !!openById[id];
-                    const isActive =
-                        sidebarItem.url
-                            ? router.pathname === sidebarItem.url
-                            : sidebarItem.childs?.some(c => router.pathname === c.url);
+                    const id = sidebarItem.label; // ensure uniqueness in your data
+                    const manuallyOpen = !!openById[id];
+                    const containsActiveRoute = routeInItem(sidebarItem);
+                    const isOpen = manuallyOpen || containsActiveRoute;
+
+                    const isActive = sidebarItem.url
+                        ? router.pathname === sidebarItem.url
+                        : containsActiveRoute;
 
                     return (
                         <div key={id}>
-                            <ListItem disablePadding onClick={sidebarItem.childs ? () => toggle(id) : undefined}>
+                            <ListItem
+                                disablePadding
+                                onClick={sidebarItem.childs ? () => toggle(id) : undefined}
+                            >
                                 <ListItemButton
                                     component={sidebarItem.url ? Link : 'div'}
                                     href={sidebarItem.url ?? undefined}
-                                    sx={{ textDecoration: 'none', color: 'inherit' }}
+                                    sx={{
+                                        textDecoration: 'none',
+                                        color: 'inherit',
+                                        // Better selected styling (icon + text)
+                                        '&.Mui-selected': {
+                                            bgcolor: 'action.selected',
+                                        },
+                                        '&.Mui-selected .MuiListItemIcon-root': {
+                                            color: 'inherit',
+                                        },
+                                    }}
                                     selected={isActive}
                                 >
-                                    <ListItemIcon sx={{ color: 'white' }}>{sidebarItem.icon}</ListItemIcon>
+                                    <ListItemIcon sx={{ color: 'inherit' }}>
+                                        {sidebarItem.icon}
+                                    </ListItemIcon>
                                     <ListItemText primary={sidebarItem.label} />
                                 </ListItemButton>
                             </ListItem>
@@ -115,14 +158,24 @@ export default function Layer(props: Props) {
                             {sidebarItem.childs && (
                                 <Collapse in={isOpen} timeout="auto" unmountOnExit>
                                     {sidebarItem.childs.map((item) => (
-                                        <ListItem key={`${id}-${item.url}`} disablePadding className="bg-dark-child-nav">
+                                        <ListItem
+                                            key={`${id}-${item.url}`}
+                                            disablePadding
+                                        >
                                             <ListItemButton
                                                 component={Link}
                                                 href={item.url}
-                                                sx={{ textDecoration: 'none', color: 'inherit' }}
+                                                sx={{
+                                                    textDecoration: 'none',
+                                                    color: 'inherit',
+                                                    pl: 6, // indent children a bit
+                                                    '&.Mui-selected': {
+                                                        bgcolor: 'action.selected',
+                                                    },
+                                                }}
                                                 selected={router.pathname === item.url}
                                             >
-                                                <ListItemText sx={{ ml: 4 }} primary={item.label} />
+                                                <ListItemText primary={item.label} />
                                             </ListItemButton>
                                         </ListItem>
                                     ))}
@@ -179,28 +232,38 @@ export default function Layer(props: Props) {
                 aria-label="mailbox folders"
             >
                 <Drawer
-                    // container={container}
                     variant="temporary"
                     open={mobileOpen}
                     onTransitionEnd={handleDrawerTransitionEnd}
                     onClose={handleDrawerClose}
                     className="block sm:hidden"
-                    sx={{
-                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 0 },
-                    }}
-                    slotProps={{
-                        root: {
-                            keepMounted: true,
+                    PaperProps={{
+                        sx: {
+                            width: 240,
+                            bgcolor: 'grey.900',     // dark background
+                            color: 'common.white',
+                            borderRight: 0,
+                            backgroundImage: 'none', // remove gradients on some themes
+                            overflow: 'hidden'
                         },
                     }}
+                    slotProps={{ root: { keepMounted: true } }}
                 >
                     {drawer}
                 </Drawer>
+
                 <Drawer
                     variant="permanent"
-                    sx={{
-                        display: { xs: 'none', sm: 'block' },
-                        '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 0 },
+                    sx={{ display: { xs: 'none', sm: 'block' } }}
+                    PaperProps={{
+                        sx: {
+                            width: 240,
+                            bgcolor: 'grey.900',
+                            color: 'common.white',
+                            borderRight: 0,
+                            backgroundImage: 'none',
+                            overflow: 'hidden'
+                        },
                     }}
                     open
                 >

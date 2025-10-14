@@ -60,17 +60,33 @@ export default function DishCard({
             />
           }
         </Box>
-        <Typography variant="body1" className="px-2 mt-2 md:h-20 h-12">
+        <Typography
+          variant="body1"
+          className="px-2 mt-2 !pt-1"                 // remove md:h-20 h-12 here
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: { xs: 2, md: 3 }, // 2 lines on phones, 3 on md+
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            lineHeight: 1.2,
+            // keep card heights consistent even when lines clamp
+            minHeight: { xs: "calc(1.2em * 2)", md: "calc(1.2em * 3)" },
+            // handle super-long unbroken words
+            overflowWrap: "anywhere",
+            wordBreak: "break-word",
+          }}
+        >
           {localizedDishName}
         </Typography>
         <Box className="px-2 flex items-center justify-between">
           <Typography variant="h6" className="px-1 !font-bold">
             {dish["dish_price"]}円
           </Typography>
-          <Box className="flex items-center rounded-3xl border border-gray-400 !text-gray-400 px-2 py-1">
+          {/* <Box className="flex items-center rounded-3xl border border-gray-400 !text-gray-400 px-2 py-1">
             <ShoppingCartIcon className="!text-xs"/>
             <Typography variant="body1" className=" !text-xs !font-light">Order</Typography>
-          </Box>
+          </Box> */}
         </Box>
       </Paper>
     </Box>

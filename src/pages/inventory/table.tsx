@@ -119,6 +119,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 }
 
 interface TableProps {
+    time: string;
     rows: Inventory[];
     info: (value: string) => void;
     error: (value: string) => void;
@@ -141,7 +142,7 @@ const buildInitial = (rows: Array<ItemDraft>) => {
     return m;
 };
 
-export default function Page({ rows, info, error, setIsShow, filterSupplierId, setFilterSupplierId }: TableProps) {
+export default function Page({ time, rows, info, error, setIsShow, filterSupplierId, setFilterSupplierId }: TableProps) {
     const { t } = useTranslation('common')
 
     const [page, setPage] = React.useState(0);
@@ -464,7 +465,7 @@ export default function Page({ rows, info, error, setIsShow, filterSupplierId, s
                 </TableHead>
                 <TableBody>
                     {view === 'add' && (
-                        <AddPanel onBack={handleBackClick} onSave={handleSaveClick} />
+                        <AddPanel time={time} onBack={handleBackClick} onSave={handleSaveClick} />
                     )}
                     {pagedRows?.map((row) => {
                         const draft = items[row?.inventory_id] ?? {
@@ -475,6 +476,7 @@ export default function Page({ rows, info, error, setIsShow, filterSupplierId, s
                         return (
                             view === 'edit' && editItem?.inventory_id === row?.inventory_id ? (
                                 <EditPanel
+                                    time={time}
                                     row={row}
                                     onBack={handleBackClick}
                                     onSave={handleSaveClick}

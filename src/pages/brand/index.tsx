@@ -18,6 +18,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import BrandLogoUpload from './logo';
 import ImageBulkUploader from './background';
 import { useRouter } from 'next/router';
+import PrintableTextEditor, { PrintLine } from '@/_components/brand/FancyMultiLineEditor';
 
 export async function getStaticProps({ locale }: { locale: string }) {
     return {
@@ -50,6 +51,8 @@ const BrandConfigPage = () => {
 
     const [errorMessage, setErrorMessage] = useState('');
     const [infoMessage, setInfoMessage] = useState('');
+
+    const [printLines, setPrintLines] = React.useState<PrintLine[]>([]);
 
     const router = useRouter();
     const { locale } = router;
@@ -95,6 +98,7 @@ const BrandConfigPage = () => {
                                 res.data?.dish5
                     setDish5(dish_name5 ? dish_name5 : '')
                 }
+                setPrintLines(JSON.parse(res.data?.print_data));
             })
             .catch(error => {
                 if (error.response) {
@@ -161,6 +165,7 @@ const BrandConfigPage = () => {
             formData.append('background_duration', duration.toString());
             formData.append('screen_saver_after', screenInterval.toString());
             brandLogo && formData.append('restaurant_logo', brandLogo);
+            formData.append('print_data', JSON.stringify(printLines));
 
             bgImages.forEach((file) => {
                 formData.append('restaurant_background[]', file);
@@ -305,7 +310,12 @@ const BrandConfigPage = () => {
                             </Grid>
                         </Grid>
                     </Grid>
-
+                    <Grid size={12}>
+                        <PrintableTextEditor
+                            value={printLines}
+                            onChange={(next) => setPrintLines(next)}
+                        />
+                    </Grid>
                 </Grid>
                 <Box mt={4} display="flex" justifyContent="flex-end">
                     <Button

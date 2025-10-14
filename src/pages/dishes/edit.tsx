@@ -122,7 +122,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
         {
             key: "extra_price", label: t('extra_price'), width: "10ch", input: {
                 type: "number",
-                required: true,
+                // required: true,
                 placeholder: "0",
             }
         },
@@ -131,8 +131,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                 type: "select",
                 required: true,
                 options: [
-                    { label: t('required'), value: 0 },
-                    { label: t('optional'), value: 1 }
+                    { label: t('required'), value: 1 },
+                    { label: t('optional'), value: 0 }
                 ],
                 placeholder: t('select')
             }

@@ -73,9 +73,6 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onSave, onBack }) => {
                     {row?.purchasedQty ?? '--'}
                 </TableCell>
                 <TableCell align="right">
-                    {row?.actualStock ? Math.round(row?.difference / row?.actualStock * 100) + '%' : '--'}
-                </TableCell>
-                <TableCell align="right">
                     {row?.salesConsumption ?? '--'}
                 </TableCell>
                 <TableCell align="right">
@@ -86,6 +83,9 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onSave, onBack }) => {
                 </TableCell>
                 <TableCell align="right">
                     {row?.difference ?? '--'}
+                </TableCell>
+                <TableCell align="right">
+                    {(row?.actualStock && (row?.actualStock > 0)) ? Math.round((row?.difference ?? 0) / row?.actualStock * 100) + '%' : '--'}
                 </TableCell>
                 <TableCell>
                     <TextField

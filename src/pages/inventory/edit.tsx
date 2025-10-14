@@ -15,12 +15,13 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
 type ParamProps = {
+    time: string,
     row: Inventory;
     onBack: () => void;
     onSave: (data: Inventory) => void;
 };
 
-const EditPanel: React.FC<ParamProps> = ({ row, onBack, onSave }) => {
+const EditPanel: React.FC<ParamProps> = ({ time, row, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
@@ -40,6 +41,7 @@ const EditPanel: React.FC<ParamProps> = ({ row, onBack, onSave }) => {
         formData.append("_method", "put")
 
         formData.append('stock', stock.toString());
+        formData.append('date', time);
 
         api.post(`/inventory/${row?.inventory_id}`, formData)
             .then(res => {
@@ -49,8 +51,12 @@ const EditPanel: React.FC<ParamProps> = ({ row, onBack, onSave }) => {
                 if (error.response && error.response.status === 422) {
                     // Validation error from server
                     console.log(error.response.data);
-                    // setErrorMessage(error.response.data.message);
-                    setErrorMessage(t('something_went_wrong'));
+                    if (error.response.data.message === "The name has already been taken.") {
+                        setErrorMessage(t('name_has_already_been_taken'));
+                    } else {
+                        // setErrorMessage(error.response.data.message);
+                        setErrorMessage(t('something_went_wrong'));
+                    }
                 } else {
                     // Other errors
                     console.error(t('unexpected_error'), error);

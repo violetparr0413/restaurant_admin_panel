@@ -6,6 +6,18 @@ import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate }
 import { useTranslation } from 'next-i18next';
 import { InvoiceLog, PaymentMethod } from '@/utils/info';
 
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
+
+// dayjs locale packs
+import 'dayjs/locale/en';
+import 'dayjs/locale/ko';
+import 'dayjs/locale/ja';
+import 'dayjs/locale/zh';
+import { useRouter } from 'next/router';
+
 type ParamProps = {
   refresh: (datas: InvoiceLog[]) => void;
 };
@@ -16,6 +28,7 @@ const monthago = get1MonthAgo()
 const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const { t } = useTranslation('common')
+  const { locale = 'en' } = useRouter();
 
   const PAID_STATUS = [
     t('all'),
@@ -25,9 +38,9 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const [isPaid, setIsPaid] = React.useState(0);
   const [paymentMethodId, setPaymentMethodId] = React.useState(0);
-  const [fromDate, setFromDate] = React.useState(monthago);
-  const [toDate, setToDate] = React.useState(today);
   const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[] | null>(null);
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
+  const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
   const [errorMessage, setErrorMessage] = React.useState('');
 
@@ -35,17 +48,20 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
     if (fromDate && toDate) {
       setErrorMessage('');
 
+      const fromDateSTR = fromDate.format('YYYY-MM-DD');
+      const toDateSTR = toDate.format('YYYY-MM-DD');
+
       const formData = new FormData();
 
       isPaid && formData.append('is_paid', (isPaid === 1 ? true : false).toString());
       formData.append('payment_method_id', paymentMethodId.toString());
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      formData.append('from_date', convertDateTime1(fromDateSTR));
+      formData.append('to_date', convertDateTime2(toDateSTR));
 
       api.post('/get-guest-by-date', formData)
         .then(res => {
           // console.log(res.data)
-          refresh(res.data.data) 
+          refresh(res.data.data)
         })
         .catch(error => {
           if (error?.response?.status === 422) {
@@ -143,28 +159,30 @@ const InvoiceSearchBox: React.FC<ParamProps> = ({ refresh }) => {
           </FormControl>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('from_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('from_date')}
+              value={fromDate}
+              onChange={(newVal) => setFromDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('to_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('to_date')}
+              value={toDate}
+              onChange={(newVal) => setToDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: "auto" }}>
           <IconButton

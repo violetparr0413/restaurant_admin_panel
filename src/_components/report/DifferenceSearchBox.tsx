@@ -4,6 +4,16 @@ import SearchIcon from '@mui/icons-material/Search';
 import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate } from '@/utils/http_helper';
 
 import { useTranslation } from 'next-i18next';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
+
+// dayjs locale packs
+import 'dayjs/locale/en';
+import 'dayjs/locale/ko';
+import 'dayjs/locale/ja';
+import 'dayjs/locale/zh';
 import { useRouter } from 'next/router';
 
 type ParamProps = {
@@ -18,29 +28,30 @@ const monthago = get1MonthAgo()
 const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
 
   const { t } = useTranslation('common')
+  const { locale = 'en' } = useRouter();
 
-  const [fromDate, setFromDate] = React.useState(monthago);
-  const [toDate, setToDate] = React.useState(today);
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
+  const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
   const [errorMessage, setErrorMessage] = React.useState('');
-
-  const router = useRouter();
-  const { locale } = router;
 
   const handleSearch = React.useCallback(() => {
     if (fromDate && toDate) {
       setErrorMessage('');
 
+      const fromDateSTR = fromDate.format('YYYY-MM-DD');
+      const toDateSTR = toDate.format('YYYY-MM-DD');
+
       const formData = new FormData();
 
-      formData.append('from', convertDateTime1(fromDate));
-      formData.append('to', convertDateTime2(toDate));
+      formData.append('from', convertDateTime1(fromDateSTR));
+      formData.append('to', convertDateTime2(toDateSTR));
 
       api.post(url, formData)
         .then(res => {
-            // console.log(res.data);
-            headers(res.data.input_dates)
-            refresh(res.data.inventoryDifference)
+          // console.log(res.data);
+          headers(res.data.input_dates)
+          refresh(res.data.inventoryDifference)
         })
         .catch(error => {
           if (error?.response?.status === 422) {
@@ -89,28 +100,30 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
           </Grid>
         )}
         <Grid size={{ xs: 12, sm: 3 }}>
-          <TextField
-            label={t('from_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('from_date')}
+              value={fromDate}
+              onChange={(newVal) => setFromDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
-          <TextField
-            label={t('to_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('to_date')}
+              value={toDate}
+              onChange={(newVal) => setToDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: "auto" }}>
           <IconButton

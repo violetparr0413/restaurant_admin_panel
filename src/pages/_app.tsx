@@ -38,79 +38,96 @@ interface ISidebarItems {
 }
 
 function AuthGuard({
-    children,
-    publicRoutes,
+  children,
+  publicRoutes,
 }: {
-    children: React.ReactNode;
-    publicRoutes: string[];
+  children: React.ReactNode;
+  publicRoutes: string[];
 }) {
-    const router = useRouter();
-    const [ready, setReady] = useState(false);
+  const router = useRouter();
+  const [initialized, setInitialized] = useState(false);
+  const [authed, setAuthed] = useState<boolean | null>(null); // null = unknown on first load
 
-    const isPublic = useMemo(() => {
-        const p = router.pathname;
-        return publicRoutes.some((r) =>
-            r.endsWith('*') ? p.startsWith(r.slice(0, -1)) : p === r
-        );
-    }, [router.pathname, publicRoutes]);
+  const isPublicPath = useCallback(
+    (p: string) => publicRoutes.some((r) => (r.endsWith('*') ? p.startsWith(r.slice(0, -1)) : p === r)),
+    [publicRoutes]
+  );
 
-    const check = useCallback(
-        async (url?: string) => {
-            const path = url
-                ? new URL(url, window.location.origin).pathname
-                : router.pathname;
-
-            const pathIsPublic = publicRoutes.some((r) =>
-                r.endsWith('*') ? path.startsWith(r.slice(0, -1)) : path === r
-            );
-
-            if (pathIsPublic) {
-                setReady(true);
-                return;
-            }
-
-            try {
-                const res = (await api.get('/user')).data;
-                if (res?.status === 'success') {
-                    setReady(true);
-                } else {
-                    setReady(false);
-                    router.replace('/auth/signin');
-                }
-            } catch {
-                setReady(false);
-                router.replace('/auth/signin');
-            }
-        },
-        [router, publicRoutes]
-    );
-
-    useEffect(() => {
-        // initial load
-        check();
-
-        // handle client-side navigations
-        const start = () => setReady(false);
-        const done = (url: string) => check(url);
-
-        router.events.on('routeChangeStart', start);
-        router.events.on('routeChangeComplete', done);
-        return () => {
-            router.events.off('routeChangeStart', start);
-            router.events.off('routeChangeComplete', done);
-        };
-    }, [check, router.events]);
-
-    if (!ready) {
-        return (
-            <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }} open>
-                <CircularProgress color="inherit" />
-            </Backdrop>
-        );
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = (await api.get('/user')).data;
+      setAuthed(res?.status === 'success');
+    } catch {
+      setAuthed(false);
+    } finally {
+      setInitialized(true);
     }
+  }, []);
 
-    return <>{children}</>;
+  // Initial load
+  useEffect(() => {
+    if (isPublicPath(router.pathname)) {
+      setAuthed(true);
+      setInitialized(true);
+    } else {
+      checkAuth();
+    }
+  }, [router.pathname, isPublicPath, checkAuth]);
+
+  // Handle client-side navigations
+  useEffect(() => {
+    const handleRouteChangeStart = (url: string) => {
+      // Don't blank the screen on every navigation.
+      // We only need to re-check when moving from a public route into a protected route
+      // or if we haven't established auth yet.
+      const nextPath = new URL(url, window.location.origin).pathname;
+      if (!isPublicPath(nextPath) && authed === null) {
+        // first load but navigation happened quickly — still initializing
+        // let the initial backdrop show (initialized will still be false)
+        return;
+      }
+      // Otherwise keep the UI mounted; optional: show a top progress bar instead.
+    };
+
+    const handleRouteChangeComplete = async (url: string) => {
+      const nextPath = new URL(url, window.location.origin).pathname;
+      if (isPublicPath(nextPath)) return;
+
+      // If we don't know auth yet (rare) or user might have expired, re-check.
+      if (authed === null) {
+        await checkAuth();
+      } else if (authed === false) {
+        router.replace('/auth/signin');
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
+    };
+  }, [router.events, isPublicPath, authed, checkAuth, router]);
+
+  // Initial gate only: show backdrop while we don't yet know
+  if (!initialized) {
+    return (
+      <Backdrop sx={{ color: '#fff', zIndex: (t) => t.zIndex.drawer + 1 }} open>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    );
+  }
+
+  // If initialized and not authed on a protected route, redirect (and optionally keep UI)
+  if (!isPublicPath(router.pathname) && authed === false) {
+    // defensive: prevent flashing protected content
+    router.replace('/auth/signin');
+    return null;
+  }
+
+  return <>{children}</>;
 }
+
 
 function App({ Component, pageProps }: AppProps) {
 
@@ -261,7 +278,7 @@ function App({ Component, pageProps }: AppProps) {
         { url: '/invoice', label: t('invoice_log') },
         { url: '/inventory_unit', label: t('product_unit') },
         { url: '/supplier', label: t('supplier') },
-        { url: '/inventory', label: t('inventory') },
+        { url: '/inventory', label: t('raw_material') },
         { url: '/report_inventory', label: t('inventory_report') },
         { url: '/report_difference', label: t('difference_report') },
         { url: '/purchase_history', label: t('purchase_history') },

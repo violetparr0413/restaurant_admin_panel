@@ -23,17 +23,18 @@ export default function Page() {
     const [errorMessage, setErrorMessage] = useState('');
     const [isShow, setIsShow] = useState<boolean>(false);
     const [filterSupplierId, setFilterSupplierId] = useState<number>(0);
+    const [time, setTime] = useState<string>('')
     
     return (
         <Box>
-            <SearchBox refresh={setData} isShow={isShow} filterSupplier={setFilterSupplierId} filterSupplierId={filterSupplierId}/>
+            <SearchBox refreshTime={setTime} refresh={setData} isShow={isShow} filterSupplier={setFilterSupplierId} filterSupplierId={filterSupplierId}/>
             {errorMessage && (
                 <Alert sx={{mb:1}} severity="error">{errorMessage}</Alert>
             )}
             {infoMessage && (
                 <Alert sx={{mb:1}} severity="success">{infoMessage}</Alert>
             )}
-            <Table rows={data} info={setInfoMessage} error={setErrorMessage} setIsShow={setIsShow} filterSupplierId={filterSupplierId} setFilterSupplierId={setFilterSupplierId}/>
+            <Table time={time} rows={data} info={setInfoMessage} error={setErrorMessage} setIsShow={setIsShow} filterSupplierId={filterSupplierId} setFilterSupplierId={setFilterSupplierId}/>
         </Box>
     )
 }

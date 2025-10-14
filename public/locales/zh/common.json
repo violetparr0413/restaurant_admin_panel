@@ -220,5 +220,10 @@
   "date": "日期",
   "difference_report": "差异报告",
   "required": "必填",
-  "optional": "可选"
+  "optional": "可选",
+  "size": "尺寸",
+  "printable_text": "可打印文本",
+  "name_has_already_been_taken": "该名称已被占用",
+  "add": "添加",
+  "total_price": "总价"
 }

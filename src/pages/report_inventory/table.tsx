@@ -223,7 +223,7 @@ export default function Page({ rows }: TableProps) {
                                         {row?.difference ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {(row?.actualStock && (row?.actualStock > 0)) ? Math.round(row?.difference ?? 0 / row?.actualStock * 100) + '%' : '--'}
+                                        {(row?.actualStock && (row?.actualStock > 0)) ? Math.round((row?.difference ?? 0) / row?.actualStock * 100) + '%' : '--'}
                                     </TableCell>
                                     <TableCell>
                                         {row?.inventory.remark}

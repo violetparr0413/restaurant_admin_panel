@@ -16,6 +16,7 @@ import {
     Stack,
     Typography,
     useMediaQuery,
+    Tooltip
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
@@ -127,6 +128,32 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     const [serviceOpen, setServiceOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
 
+    const [openId, setOpenId] = useState<number | null>(null);
+
+    const handleTooltipToggle = (id: number) => {
+        setOpenId((prev) => (prev === id ? null : id)); // toggle current, close others
+        // auto-close after 2s (for mobile)
+        setTimeout(() => setOpenId(null), 2000);
+    };
+
+    const [openCartId, setOpenCartId] = useState<number | null>(null);
+
+    const handleCartTooltipToggle = (id: number) => {
+        console.log(id)
+        setOpenCartId((prev) => (prev === id ? null : id));
+        // auto-close after 2s for mobile
+        setTimeout(() => setOpenCartId(null), 2000);
+    };
+
+    const getDishName = (dish) =>
+        locale === "en"
+            ? dish?.dish_en_name || dish?.dish_name
+            : locale === "zh"
+                ? dish?.dish_zh_name || dish?.dish_name
+                : locale === "ko"
+                    ? dish?.dish_ko_name || dish?.dish_name
+                    : dish?.dish_name;
+
     const getServices = useCallback(() => {
         clientApi.get("/service")
             .then((res) => {
@@ -211,6 +238,19 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             });
     }, [setCart, setCartCount, t]);
 
+    const getIncartOrderCount = useCallback(async () => {
+        clientApi
+            .get(`/get-order-by-status/INCART`)
+            .then((res) => {
+                setCartCount(res.data.length);
+            })
+            .catch((error) => {
+                if (error.response) {
+                    console.error(t("unexpected_error"), error);
+                }
+            });
+    }, [setCartCount, t]);
+
     const getOrderedOrder = useCallback(async () => {
         clientApi
             .get(`/get-order-by-status/ORDERED`)
@@ -240,7 +280,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
 
                 const orderHistory = Object.values(grouped)
                 setOrderHistory(orderHistory)
-                setOrderCount(orderHistory.length);
+                setOrderCount(res.data.length);
             })
             .catch((error) => {
                 if (error.response) {
@@ -256,7 +296,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
         getIncartOrder();
         getOrderedOrder();
         const interval = setInterval(() => {
-            getIncartOrder();
+            getIncartOrderCount();
             getOrderedOrder();
         }, 5000);
 
@@ -269,18 +309,20 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
         setCart(prev => {
             const existing = prev.find(ci => ci.dish.dish_id === dish.dish_id);
             if (existing) {
-                return prev
-                    .map(ci => (ci.dish.dish_id === dish.dish_id ? { ...ci, qty: Math.max(0, ci.qty + qty) } : ci))
-                    .filter(ci => ci.qty > 0);
+                return prev.map(ci =>
+                    ci.dish.dish_id === dish.dish_id
+                        ? { ...ci, qty: Math.max(0, ci.qty + qty) }
+                        : ci
+                );
             }
             return [...prev, { order_id, dish, qty }];
         });
     }, []);
 
     const setItemQty = (dishId: number, qty: number) => {
-        setCart(prev => prev
-            .map(ci => (ci.dish.dish_id === dishId ? { ...ci, qty: Math.max(0, qty) } : ci))
-            .filter(ci => ci.qty > 0));
+        setCart(prev => prev.map(ci =>
+            ci.dish.dish_id === dishId ? { ...ci, qty: Math.max(0, qty) } : ci
+        ));
     };
 
     const cartTotal = useMemo(() => cart.reduce((sum, ci) => sum + ci.qty * ci.dish.dish_price, 0), [cart]);
@@ -303,12 +345,12 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                         .then(() => {
                             const record: OrderRecord = {
                                 id: `ord_${Date.now()}`,
-                                items: cart.map(ci => ({ ...ci })),
+                                items: cart.filter(ci => ci.qty > 0).map(ci => ({ ...ci })),
                                 total: cartTotal,
                                 createdAt: Date.now(),
                             };
 
-                            setOrderHistory(prev => [record, ...prev]);
+                            if (record.items.length > 0) setOrderHistory(prev => [record, ...prev]);
                             setCart([]);
                             setCartCount(0);
                         }).catch((error) => {
@@ -358,7 +400,10 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
 
     // -------- Openers used by main page
     const openDish = (dish: Dish) => setDishDrawer({ open: true, dish, qty: 1 });
-    const openCart = () => setCartOpen(true);
+    const openCart = () => {
+        setCartOpen(true)
+        getIncartOrder();
+    };
     const openCallService = () => setServiceOpen(true);
     const openOrderHistory = () => setHistoryOpen(true);
 
@@ -443,6 +488,7 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     };
 
     const youtubeId = getYouTubeId(dishDrawer.dish?.youtube_url);
+    const isTiny = useMediaQuery("(max-width:360px)");
 
     return (
         <ClientUIContext.Provider value={value}>
@@ -479,15 +525,52 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                     backgroundSize: "cover",
                     backgroundPosition: "center"
                 }} />)}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                    <Typography variant="h5" fontWeight={700}>{
-                        locale === 'en' ? dishDrawer.dish?.dish_en_name || dishDrawer.dish?.dish_name :
-                            locale === 'zh' ? dishDrawer.dish?.dish_zh_name || dishDrawer.dish?.dish_name :
-                                locale === 'ko' ? dishDrawer.dish?.dish_ko_name || dishDrawer.dish?.dish_name :
-                                    dishDrawer.dish?.dish_name
-                    }</Typography>
-                    <Typography variant="h5" fontWeight={700}>{formatJPY(dishDrawer.dish?.dish_price ?? 0)}</Typography>
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto", // name grows, price hugs right
+                        alignItems: "start",
+                        columnGap: 1.5,
+                        mb: 2,
+                    }}
+                >
+                    <Typography
+                        variant="h5"
+                        fontWeight={700}
+                        sx={{
+                            // let the name take space but not collide with price
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,           // show up to 2 lines, then…
+                            WebkitBoxOrient: "vertical",
+                            textOverflow: "ellipsis",
+                            lineHeight: 1.2,
+                            pr: 1,
+                        }}
+                    >
+                        {
+                            locale === 'en' ? dishDrawer.dish?.dish_en_name || dishDrawer.dish?.dish_name :
+                                locale === 'zh' ? dishDrawer.dish?.dish_zh_name || dishDrawer.dish?.dish_name :
+                                    locale === 'ko' ? dishDrawer.dish?.dish_ko_name || dishDrawer.dish?.dish_name :
+                                        dishDrawer.dish?.dish_name
+                        }
+                    </Typography>
+
+                    <Typography
+                        variant="h5"
+                        fontWeight={800}
+                        sx={{
+                            whiteSpace: "nowrap",        // keep price on one line
+                            flexShrink: 0,
+                            ml: 1,
+                            pl: 1,
+                            borderLeft: (theme) => `1px solid ${theme.palette.divider}`, // subtle visual separator
+                        }}
+                    >
+                        {formatJPY(dishDrawer.dish?.dish_price ?? 0)}
+                    </Typography>
                 </Box>
+
                 <Box sx={{ flexGrow: 1 }} />
 
                 <FooterBar>
@@ -498,8 +581,24 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                     />
                     <Button
                         variant="contained"
-                        startIcon={<CheckIcon />}
-                        sx={{ bgcolor: "#ffc83d", color: "black", '&:hover': { bgcolor: "#e6b836" } }}
+                        fullWidth
+                        startIcon={!isTiny && <CheckIcon />} // hide icon on the tiniest phones
+                        sx={{
+                            bgcolor: "#ffc83d",
+                            color: "black",
+                            "&:hover": { bgcolor: "#e6b836" },
+
+                            // keep the label on one line
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                            overflow: "hidden",
+                            maxWidth: "100%",
+                            minWidth: 0,
+                            px: 2,
+
+                            // tighten icon spacing
+                            ".MuiButton-startIcon": { mr: 1, ml: 0 },
+                        }}
                         onClick={() => {
                             if (dishDrawer.dish) {
                                 clientApi
@@ -518,13 +617,13 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                             setCartOpen(true);
                         }}
                     >
-                        {t('add_to_cart')} ({dishDrawer.qty})
+                        {isTiny ? t("add") : t("add_to_cart")} ({dishDrawer.qty})
                     </Button>
                 </FooterBar>
             </Drawer>
 
             <Drawer anchor={isMobile ? "bottom" : "right"} open={cartOpen} onClose={() => setCartOpen(false)} PaperProps={{ sx: paperSx }}>
-                <TopBar isRed={false} title={t('my_cart')} onClose={() => setCartOpen(false)} right={<Chip label={`Total ${formatJPY(cartTotal)}`} sx={{ bgcolor: "#ffc83d" }} />} />
+                <TopBar isRed={false} title={t('my_cart')} onClose={() => setCartOpen(false)} right={<Chip label={`${t('total_price')} ${formatJPY(cartTotal)}`} sx={{ bgcolor: "#ffc83d" }} />} />
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
                     {cart.length === 0 ? (
                         <Box sx={{ py: 6, textAlign: "center" }}>
@@ -532,29 +631,91 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                         </Box>
                     ) : (
                         <List>
-                            {cart.map(ci => (
-                                <ListItem key={ci.dish.dish_id} secondaryAction={
-                                    <QtyStepper
-                                        size="small"
-                                        value={ci.qty}
-                                        onDec={() => setItemQty(ci.dish.dish_id, ci.qty - 1)}
-                                        onInc={() => setItemQty(ci.dish.dish_id, ci.qty + 1)}
-                                    />
-                                }>
-                                    <ListItemAvatar>
-                                        <Avatar variant="rounded" src={`${backendUrl}/${ci.dish?.dish_image ?? ""}`} alt={
-                                            locale === 'en' ? ci.dish?.dish_en_name || ci.dish?.dish_name :
-                                                locale === 'zh' ? ci.dish?.dish_zh_name || ci.dish?.dish_name :
-                                                    locale === 'ko' ? ci.dish?.dish_ko_name || ci.dish?.dish_name :
-                                                        ci.dish?.dish_name
-                                        } />
-                                    </ListItemAvatar>
-                                    <ListItemText primary={locale === 'en' ? ci.dish?.dish_en_name || ci.dish?.dish_name :
-                                        locale === 'zh' ? ci.dish?.dish_zh_name || ci.dish?.dish_name :
-                                            locale === 'ko' ? ci.dish?.dish_ko_name || ci.dish?.dish_name :
-                                                ci.dish?.dish_name} secondary={formatJPY(ci.dish.dish_price)} />
-                                </ListItem>
-                            ))}
+                            {cart.map((ci) => {
+                                const dishName = getDishName(ci.dish);
+                                const price = formatJPY(ci.dish.dish_price);
+                                const isCanceled = ci.qty === 0;
+
+                                return (
+                                    <ListItem
+                                        key={ci.dish.dish_id}
+                                        className="!pr-28 !pl-0 !py-0"
+                                        secondaryAction={
+                                            <QtyStepper
+                                                size="small"
+                                                value={ci.qty}
+                                                onDec={() => setItemQty(ci.dish.dish_id, ci.qty - 1)}
+                                                onInc={() => setItemQty(ci.dish.dish_id, ci.qty + 1)}
+                                            />
+                                        }
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            "& .MuiListItemText-root": { minWidth: 0 },
+                                            "& .MuiListItemSecondaryAction-root": { right: 0 },
+                                            opacity: isCanceled ? 0.85 : 1,
+                                        }}
+                                    >
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                variant="rounded"
+                                                src={`${backendUrl}/${ci.dish?.dish_image ?? ""}`}
+                                                alt={dishName}
+                                                sx={isCanceled ? { filter: "grayscale(1)", opacity: 0.6 } : undefined}
+                                            />
+                                        </ListItemAvatar>
+
+                                        <Tooltip
+                                            title={
+                                                <div>
+                                                    <div>{dishName}</div>
+                                                    <div>{price}</div>
+                                                </div>
+                                            }
+                                            open={openCartId === ci.dish.dish_id}
+                                            onClose={() => setOpenCartId(null)}
+                                            disableHoverListener
+                                            disableFocusListener
+                                            disableTouchListener
+                                            placement="top"
+                                            PopperProps={{
+                                                modifiers: [
+                                                    {
+                                                        name: "offset",
+                                                        options: { offset: [0, -6] }, // move tooltip slightly up
+                                                    },
+                                                ],
+                                            }}
+                                        >
+                                            <ListItemText
+                                                primary={dishName}
+                                                secondary={price}
+                                                onClick={() => handleCartTooltipToggle(ci.dish.dish_id)}
+                                                primaryTypographyProps={{
+                                                    sx: isCanceled ? { color: "text.disabled" } : undefined,
+                                                }}
+                                                secondaryTypographyProps={{
+                                                    sx: isCanceled
+                                                        ? { color: "error.main", textDecoration: "line-through", fontWeight: 700 }
+                                                        : undefined,
+                                                }}
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    pr: 2,
+                                                    cursor: "pointer",
+                                                    "& .MuiTypography-root": {
+                                                        overflow: "hidden",
+                                                        whiteSpace: "nowrap",
+                                                        textOverflow: "ellipsis",
+                                                        display: "block",
+                                                    },
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </ListItem>
+                                );
+                            })}
                         </List>
                     )}
                 </Box>
@@ -575,15 +736,56 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                 <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
                     <List>
                         {services.map(s => (
-                            <ListItem key={s.id} secondaryAction={
-                                <QtyStepper
-                                    size="small"
-                                    value={s.qty}
-                                    onDec={() => setServiceQty(s.id, s.qty - 1)}
-                                    onInc={() => setServiceQty(s.id, s.qty + 1)}
-                                />
-                            }>
-                                <ListItemText primary={s.name} />
+                            <ListItem
+                                key={s.id}
+                                className="!pr-28 !pl-0"
+                                secondaryAction={
+                                    <QtyStepper
+                                        size="small"
+                                        value={s.qty}
+                                        onDec={() => setServiceQty(s.id, s.qty - 1)}
+                                        onInc={() => setServiceQty(s.id, s.qty + 1)}
+                                    />
+                                }
+                                sx={{
+                                    "& .MuiListItemSecondaryAction-root": {
+                                        right: 0, // move secondaryAction 16px from the right
+                                    },
+                                }}
+                            >
+                                <Tooltip
+                                    title={s.name}
+                                    open={openId === s.id}
+                                    onClose={() => setOpenId(null)}
+                                    disableHoverListener
+                                    disableFocusListener
+                                    disableTouchListener
+                                    PopperProps={{
+                                        modifiers: [
+                                            {
+                                                name: "offset",
+                                                options: { offset: [0, -20] },
+                                            },
+                                        ],
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={s.name}
+                                        onClick={() => handleTooltipToggle(s.id)}
+                                        sx={{
+                                            flex: 1,
+                                            minWidth: 0,           // ✅ must shrink inside flex container
+                                            pr: 2,
+                                            cursor: "pointer",
+                                            "& .MuiTypography-root": {
+                                                overflow: "hidden",  // ✅ apply ellipsis here
+                                                whiteSpace: "nowrap",
+                                                textOverflow: "ellipsis",
+                                                display: "block",    // ensures ellipsis is visible
+                                            },
+                                        }}
+                                    />
+                                </Tooltip>
                             </ListItem>
                         ))}
                     </List>
@@ -598,21 +800,22 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
             {/* Order History Drawer */}
             <Drawer anchor={isMobile ? "bottom" : "right"} open={historyOpen} onClose={() => setHistoryOpen(false)} PaperProps={{ sx: paperSx }}>
                 <TopBar isRed={false} title={t('order_history')} onClose={() => setHistoryOpen(false)} />
-                <Box sx={{ flex: 1, overflow: "auto", py: 1 }}>
+                <Box sx={{ flex: 1, overflow: "auto", py: 0 }}>
                     {orderHistory.length === 0 ? (
                         <Box sx={{ py: 6, textAlign: "center" }}>
                             <Typography variant="body1" color="text.secondary">{t('no_orders_yet')}</Typography>
                         </Box>
                     ) : (
-                        <List>
+                        <List className="!py-0">
                             {orderHistory.map((o) => (
                                 <Box key={o.id}>
-                                    <ListItem alignItems="flex-start">
+                                    <ListItem alignItems="flex-start" className="!px-0">
                                         <ListItemText
                                             primary={
                                                 <Stack
                                                     direction="row"
                                                     alignItems="center"
+                                                    className="justify-between"
                                                     spacing={1}
                                                     sx={{ flexWrap: "wrap", wordBreak: "break-word" }}
                                                 >
@@ -702,11 +905,35 @@ function FooterBar({ children }: { children: React.ReactNode }) {
 function QtyStepper({ value, onDec, onInc, size = "medium" as "small" | "medium" }) {
     return (
         <Stack direction="row" spacing={1} alignItems="center">
-            <IconButton aria-label="decrease quantity" onClick={onDec} size={size} sx={{ bgcolor: "#ffc83d" }}>
+            <IconButton aria-label="decrease quantity" onClick={onDec} size={size}
+                sx={{
+                    bgcolor: "#ffc83d",
+                    "&:hover": {
+                        bgcolor: "#ffc83d", // same color on hover
+                    },
+                    "&:active": {
+                        bgcolor: "#ffc83d", // same color on click
+                    },
+                    "&:focus": {
+                        bgcolor: "#ffc83d", // same color on focus
+                    },
+                }}>
                 <RemoveIcon />
             </IconButton>
             <Typography variant={size === "small" ? "body1" : "h6"} sx={{ minWidth: 24, textAlign: "center" }}>{value}</Typography>
-            <IconButton aria-label="increase quantity" onClick={onInc} size={size} sx={{ bgcolor: "#ffc83d" }}>
+            <IconButton aria-label="increase quantity" onClick={onInc} size={size}
+                sx={{
+                    bgcolor: "#ffc83d",
+                    "&:hover": {
+                        bgcolor: "#ffc83d", // same color on hover
+                    },
+                    "&:active": {
+                        bgcolor: "#ffc83d", // same color on click
+                    },
+                    "&:focus": {
+                        bgcolor: "#ffc83d", // same color on focus
+                    },
+                }}>
                 <AddIcon />
             </IconButton>
         </Stack>

@@ -220,5 +220,10 @@
   "date": "日付",
   "difference_report": "差分レポート",
   "required": "必須",
-  "optional": "任意"
+  "optional": "任意",
+  "size": "サイズ",
+  "printable_text": "印刷可能なテキスト",
+  "name_has_already_been_taken": "その名前は既に使用されています",
+  "add": "追加",
+  "total_price": "合計金額"
 }

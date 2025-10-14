@@ -19,11 +19,12 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
 type AddPanelProps = {
+    time: string,
     onBack: () => void;
     onSave: (data: Inventory) => void;
 };
 
-const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
+const AddPanel: React.FC<AddPanelProps> = ({ time, onBack, onSave }) => {
 
     const { t } = useTranslation('common')
 
@@ -65,6 +66,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             formData.append('name', name);
             formData.append('stock', stock.toString());
             formData.append('unit_id', unitId.toString());
+            formData.append('date', time);
             // locale === 'en' ? formData.append('unit_en_name', name) :
             //     locale === 'zh' ? formData.append('unit_zh_name', name) :
             //         locale === 'ko' ? formData.append('unit_ko_name', name) :
@@ -73,13 +75,18 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             // (locale !== 'ja') && formData.append('unit_name', name);
 
             api.post('/inventory', formData)
-                .then(res => onSave(res.data))
+                .then(res => onSave({ ...res.data, current_stock: stock }))
                 .catch(error => {
                     if (error.response && error.response.status === 422) {
                         // Validation error from server
                         console.log(error.response.data);
-                        // setErrorMessage(error.response.data.message);
-                        setErrorMessage(t('something_went_wrong'));
+                        if (error.response.data.message === "The name has already been taken.") {
+                            setErrorMessage(t('name_has_already_been_taken'));
+                        } else {
+                            // setErrorMessage(error.response.data.message);
+                            setErrorMessage(t('something_went_wrong'));
+                        }
+
                     } else {
                         // Other errors
                         console.error(t('unexpected_error'), error);

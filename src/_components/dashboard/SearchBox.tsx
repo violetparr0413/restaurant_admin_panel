@@ -6,6 +6,18 @@ import api, { convertDateTime1, convertDateTime2, get1MonthAgo, getCurrentDate }
 import { useTranslation } from 'next-i18next';
 import { Statistics } from '@/utils/info';
 
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
+
+// dayjs locale packs
+import 'dayjs/locale/en';
+import 'dayjs/locale/ko';
+import 'dayjs/locale/ja';
+import 'dayjs/locale/zh';
+import { useRouter } from 'next/router';
+
 type ParamProps = {
   refresh: (data: Statistics) => void;
 };
@@ -13,12 +25,13 @@ type ParamProps = {
 const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
 
   const { t } = useTranslation('common')
+  const { locale = 'en' } = useRouter();
 
   const today = getCurrentDate()
   const monthago = get1MonthAgo()
 
-  const [fromDate, setFromDate] = React.useState(monthago);
-  const [toDate, setToDate] = React.useState(today);
+  const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
+  const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
   const [errorMessage, setErrorMessage] = React.useState('');
 
@@ -26,8 +39,11 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
     if (fromDate && toDate) {
       const formData = new FormData();
 
-      formData.append('from_date', convertDateTime1(fromDate));
-      formData.append('to_date', convertDateTime2(toDate));
+      const fromDateSTR = fromDate.format('YYYY-MM-DD');
+      const toDateSTR = toDate.format('YYYY-MM-DD');
+
+      formData.append('from_date', convertDateTime1(fromDateSTR));
+      formData.append('to_date', convertDateTime2(toDateSTR));
 
       api.post('/get-statistics', formData)
         // .then(res => refresh(res.data))
@@ -64,6 +80,10 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
     return () => clearInterval(interval);
   }, [handleSearch]);
 
+  React.useEffect(() => {
+    dayjs.locale(locale);
+  }, [locale]);
+
   return (
     <Box sx={{ mb: 2, position: 'relative', border: '2px solid #1ba3e1', borderRadius: 1, p: 2, mt: 2 }}>
       <Typography
@@ -88,28 +108,30 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
           </Grid>
         )}
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('from_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('from_date')}
+              value={fromDate}
+              onChange={(newVal) => setFromDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            label={t('to_date')}
-            type="date"
-            variant="outlined"
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale={locale}
+          >
+            <DatePicker
+              label={t('to_date')}
+              value={toDate}
+              onChange={(newVal) => setToDate(newVal)}
+              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            />
+          </LocalizationProvider>
         </Grid>
         <Grid size={{ xs: "auto" }}>
           <IconButton

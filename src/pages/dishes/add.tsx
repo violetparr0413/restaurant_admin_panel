@@ -102,7 +102,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
         {
             key: "extra_price", label: t('extra_price'), width: "10ch", input: {
                 type: "number",
-                required: true,
+                // required: true,
                 placeholder: "0",
             }
         },
@@ -111,8 +111,8 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                 type: "select",
                 required: true,
                 options: [
-                    {label: t('required'), value: 0}, 
-                    {label: t('optional'), value: 1}
+                    {label: t('required'), value: 1}, 
+                    {label: t('optional'), value: 0}
                 ],
                 placeholder: t('select')
             }
@@ -127,7 +127,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
     function handleRows2Change(newRows: SubRow2[]) {
         setRows2(newRows.map((row) => ({
             name: row.name,
-            extra_price: Number(row.extra_price),
+            extra_price: Number(row.extra_price ?? 0),
             is_required: Number(row.is_required)
         })))
     }
