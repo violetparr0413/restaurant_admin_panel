@@ -70,23 +70,23 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
             <TableRow>
                 <TableCell>
                 </TableCell>
-                <TableCell>
+                <TableCell style={{ padding: 8 }}>
                     <TextField
+                        fullWidth
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
-                        size="small"
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{ padding: 8 }}>
                     <TextField
+                        fullWidth
                         value={numOfPeople}
                         onChange={(e) => setNumOfPeople(Number(e.target.value))}
                         placeholder={t('number_of_people')}
                         label={t('number_of_people')}
                         type="number"
-                        size="small"
                     />
                 </TableCell>
                 <TableCell align="right">

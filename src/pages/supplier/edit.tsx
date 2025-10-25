@@ -98,7 +98,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -107,7 +107,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={phone}
@@ -116,7 +116,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         label={t('phone')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={fax}
@@ -125,7 +125,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         label={t('fax')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={email}
@@ -134,7 +134,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                         label={t('email')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={note}

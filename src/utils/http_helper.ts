@@ -67,6 +67,10 @@ export const getEpochValue = (date: string) => {
   return Math.floor(dateObj.getTime() / 1000) * 1000; // Convert to seconds
 }
 
+export const formatNumber = (a: number) => {
+  return a % 1 === 0 ? a?.toString() : a.toFixed(2);
+}
+
 export const convertDateTime = (input: string) => {
   if (!input) return "";
   // Clean input to valid ISO (remove extra microseconds)

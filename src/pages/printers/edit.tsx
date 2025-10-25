@@ -85,7 +85,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => 
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -94,7 +94,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => 
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={ipAddress}
@@ -103,7 +103,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => 
                         label={t('ip_address')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={port}
@@ -112,7 +112,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ exist, row, onBack, onSave }) => 
                         label={t('port')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <FormControl fullWidth variant="outlined">
                         <InputLabel>{t('position')}</InputLabel>
                         <Select

@@ -22,6 +22,7 @@ import { ReportInventory } from '../../utils/info';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import EditPanel from './edit';
+import { formatNumber } from '@/utils/http_helper';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -205,22 +206,22 @@ export default function Page({ rows }: TableProps) {
                                         {row?.inventory.unit?.unit_name}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.openStock ?? '--'}
+                                        {formatNumber(row?.openStock) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.purchasedQty ?? '--'}
+                                        {formatNumber(row?.purchasedQty) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.salesConsumption ?? '--'}
+                                        {formatNumber(row?.salesConsumption) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.theoreticalBalance ?? '--'}
+                                        {formatNumber(row?.theoreticalBalance) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.actualStock ?? '--'}
+                                        {formatNumber(row?.actualStock) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {row?.difference ?? '--'}
+                                        {formatNumber(row?.difference) ?? '--'}
                                     </TableCell>
                                     <TableCell align="right">
                                         {(row?.actualStock && (row?.actualStock > 0)) ? Math.round((row?.difference ?? 0) / row?.actualStock * 100) + '%' : '--'}

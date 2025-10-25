@@ -218,7 +218,7 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
   return (
     <React.Fragment>
       <TableRow key={row?.category_id} sx={{
-        '& > *': { borderBottom: 'unset' }, backgroundColor: snapshot.isDragging
+        '& > *': { borderBottom: 'none' }, backgroundColor: snapshot.isDragging
           ? "#f0f0f0"
           : "inherit",
       }} ref={provided.innerRef}

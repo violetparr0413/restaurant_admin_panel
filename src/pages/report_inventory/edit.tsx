@@ -87,7 +87,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onSave, onBack }) => {
                 <TableCell align="right">
                     {(row?.actualStock && (row?.actualStock > 0)) ? Math.round((row?.difference ?? 0) / row?.actualStock * 100) + '%' : '--'}
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={remark}

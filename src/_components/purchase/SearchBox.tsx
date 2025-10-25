@@ -39,6 +39,8 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
   const [filter, setFilter] = React.useState('ALL');
   const [supplierId, setSupplierId] = React.useState(0);
 
+  const [name, setName] = React.useState('');
+
   const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
   const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
@@ -75,7 +77,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
       api.post('/get-inventory-history', formData)
         .then(res => {
           // console.log(res.data)
-          refresh(res.data)
+          refresh(res.data?.filter(x => x.inventory?.name?.includes(name)))
         })
         .catch(error => {
           if (error?.response?.status === 422) {
@@ -93,7 +95,7 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
     } else if (!filter) {
       setErrorMessage(t('filter_field_required'));
     }
-  }, [filter, supplierId, fromDate, toDate]); // <— include deps
+  }, [name, filter, supplierId, fromDate, toDate]); // <— include deps
 
   React.useEffect(() => {
     getSuppliers()
@@ -131,6 +133,16 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
+        <Grid size={{ xs: 12, sm: 2 }}>
+          <TextField
+            label={t('name')}
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('filter')}</InputLabel>

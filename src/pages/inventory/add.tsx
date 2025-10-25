@@ -109,7 +109,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ time, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -118,7 +118,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ time, onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         type="number"
@@ -129,7 +129,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ time, onBack, onSave }) => {
                     />
                 </TableCell>
                 <TableCell></TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <FormControl fullWidth variant="outlined">
                         <InputLabel>{t('product_unit')}</InputLabel>
                         <Select

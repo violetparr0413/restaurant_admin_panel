@@ -30,6 +30,8 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
   const { t } = useTranslation('common')
   const { locale = 'en' } = useRouter();
 
+  const [name, setName] = React.useState('');
+
   const [fromDate, setFromDate] = React.useState<Dayjs | null>(dayjs(monthago));
   const [toDate, setToDate] = React.useState<Dayjs | null>(dayjs(today));
 
@@ -51,7 +53,7 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
         .then(res => {
           // console.log(res.data);
           headers(res.data.input_dates)
-          refresh(res.data.inventoryDifference)
+          refresh(res.data.inventoryDifference?.filter(x => x.inventory?.name?.includes(name)))
         })
         .catch(error => {
           if (error?.response?.status === 422) {
@@ -67,7 +69,7 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
     } else if (!toDate) {
       setErrorMessage(t('to_date_field_required'));
     }
-  }, [fromDate, toDate]); // <— include deps
+  }, [name, fromDate, toDate]); // <— include deps
 
   React.useEffect(() => {
     handleSearch();
@@ -99,7 +101,17 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
             <Alert severity="error">{errorMessage}</Alert>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 2 }}>
+          <TextField
+            label={t('name')}
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 2 }}>
           <LocalizationProvider
             dateAdapter={AdapterDayjs}
             adapterLocale={locale}
@@ -112,7 +124,7 @@ const SearchBox: React.FC<ParamProps> = ({ headers, refresh, url }) => {
             />
           </LocalizationProvider>
         </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 2 }}>
           <LocalizationProvider
             dateAdapter={AdapterDayjs}
             adapterLocale={locale}

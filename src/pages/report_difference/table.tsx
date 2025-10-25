@@ -19,6 +19,7 @@ import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import { ReportDifference } from '../../utils/info';
 
 import { useTranslation } from 'next-i18next';
+import { formatNumber } from '@/utils/http_helper';
 
 interface TablePaginationActionsProps {
     count: number;
@@ -136,45 +137,112 @@ export default function Page({ headers, rows }: TableProps) {
         setPage(0);
     };
 
+    type HeaderGroup = { date: string; keys: string[] };
+
+    const headerGroups: HeaderGroup[] = React.useMemo(() => {
+        const byDate: Record<string, string[]> = {};
+        (headers || []).forEach((h) => {
+            const dateOnly = h.split(' ')[0];
+            (byDate[dateOnly] ||= []).push(h);
+        });
+        return Object.entries(byDate).map(([date, keys]) => ({ date, keys }));
+    }, [headers]);
+
+    // Handy list of original keys in display order for rendering body cells
+    const orderedKeys: string[] = React.useMemo(
+        () => headerGroups.flatMap((g) => g.keys),
+        [headerGroups]
+    );
+
+
     return (
         <>
             <TableContainer component={Paper} sx={{ maxHeight: maxHeight }}>
                 <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
+                    <colgroup>
+                        {/* first sticky "inventory" column */}
+                        <col style={{ width: 140 }} />
+                        {/* one fixed-width <col> for every numbered date column */}
+                        {headerGroups.flatMap((g) =>
+                            g.keys.map(() => <col key={crypto.randomUUID()} style={{ width: 108 }} />)
+                        )}
+                    </colgroup>
                     <TableHead>
+                        {/* Top row: left sticky label + grouped dates */}
                         <TableRow>
-                            <StyledTableCell sx={{ width: 160 }}>{t('inventory')}</StyledTableCell>
-                            {(headers.map((day) => (
-                                <StyledTableCell sx={{ width: 90 }} align="right">{day}</StyledTableCell>
-                            )))}
+                            <StyledTableCell
+                                component="th"
+                                scope="col"
+                                rowSpan={2}
+                                sx={{ width: 160 }}
+                            >
+                                {t('inventory')}
+                            </StyledTableCell>
+
+                            {headerGroups.map((g) => (
+                                <StyledTableCell
+                                    key={g.date}
+                                    align="right"
+                                    colSpan={g.keys.length}
+                                    component="th"
+                                    scope="colgroup"
+                                    sx={{ borderLeft: '1px solid' }}
+                                >
+                                    {g.date}
+                                </StyledTableCell>
+                            ))}
+                        </TableRow>
+
+                        {/* Second row: indices 1..N under each date */}
+                        <TableRow>
+                            {headerGroups.flatMap((g) =>
+                                g.keys.map((_, i) => (
+                                    <StyledTableCell
+                                        key={`${g.date}-${i + 1}`}
+                                        align="right"
+                                        component="th"
+                                        scope="col"
+                                        sx={{ borderLeft: '1px solid' }}
+                                    >
+                                        {i + 1}
+                                    </StyledTableCell>
+                                ))
+                            )}
                         </TableRow>
                     </TableHead>
+
                     <TableBody>
                         {(rowsPerPage > 0 && rowsData
-                            ? rowsData?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            ? rowsData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             : rowsData
                         )?.map((row) => (
                             <TableRow key={row?.inventory.inventory_id}>
                                 <TableCell component="th" scope="row">
                                     {row?.inventory.name}
                                 </TableCell>
-                                {(headers.map((day) => (
-                                    <TableCell align="right">
-                                        {row?.difference_percent[day] ? Number(row?.difference_percent[day]).toFixed(2) + "%" : "--"}
+
+                                {orderedKeys.map((k) => (
+                                    <TableCell key={k} align="right" sx={{ borderLeft: '1px solid', borderColor: 'divider' }}>
+                                        {row?.difference_percent?.[k] != null
+                                            ? `${formatNumber(Number(row.difference_percent[k]))}%`
+                                            : '--'}
                                     </TableCell>
-                                )))}
+                                ))}
                             </TableRow>
                         ))}
+
                         {emptyRows > 0 && (
                             <TableRow style={{ height: 53 * emptyRows }}>
-                                <TableCell colSpan={headers.length+1} />
+                                <TableCell colSpan={1 + (headers?.length || 0)} />
                             </TableRow>
                         )}
                     </TableBody>
+
                     <TableFooter>
                         <TableRow>
                             <TablePagination
                                 rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                colSpan={headers.length+1}
+                                colSpan={headers.length + 1}
                                 count={rowsData?.length}
                                 rowsPerPage={rowsPerPage}
                                 page={page}

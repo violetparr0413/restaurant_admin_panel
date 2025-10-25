@@ -1,52 +1,65 @@
-// SearchBox.tsx
 import React from 'react';
-import {
-  Box, Grid, IconButton, Typography, Alert
-} from '@mui/material';
+import { Box, Grid, IconButton, Typography, Alert, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import api, { convertDateTime2, getCurrentDate } from '@/utils/http_helper';
 import { useTranslation } from 'next-i18next';
-import { Inventory } from '@/utils/info';
-
-// ⬇️ NEW: date picker imports
+import { ReportInventory } from '@/utils/info';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
 import { useRouter } from 'next/router';
 
-// dayjs locale packs
 import 'dayjs/locale/en';
 import 'dayjs/locale/ko';
 import 'dayjs/locale/ja';
 import 'dayjs/locale/zh';
 
+const DATE_FMT = 'YYYY-MM-DD';
+const DATETIME_FMT = 'YYYY-MM-DD HH:mm:ss';
+const today = getCurrentDate();
+
 type ParamProps = {
-  refresh: (datas: Inventory[]) => void;
+  refresh: (datas: ReportInventory[]) => void;
   url: string;
 };
-
-const today = getCurrentDate(); // 'YYYY-MM-DD'
 
 const SearchBox: React.FC<ParamProps> = ({ refresh, url }) => {
   const { t } = useTranslation('common');
   const { locale = 'en' } = useRouter();
 
-  // Keep canonical state as string; derive Dayjs for the picker
-  const [time, setTime] = React.useState<string>(today);
+  const [name, setName] = React.useState('');
+  const [time, setTime] = React.useState<string>(''); // 'YYYY-MM-DD HH:mm:ss'
+  const [selectedDate, setSelectedDate] = React.useState<string>(''); // 'YYYY-MM-DD'
+  const [selectedTime, setSelectedTime] = React.useState<string>(''); // 'HH:mm:ss'
   const [errorMessage, setErrorMessage] = React.useState('');
-  const [allowedDates, setAllowedDates] = React.useState<string[]>([]);
+  const [allowedDateTimes, setAllowedDateTimes] = React.useState<string[]>([]);
   const [loadingDates, setLoadingDates] = React.useState<boolean>(false);
 
-  // O(1) membership checks even for huge arrays
-  const allowedSet = React.useMemo(() => new Set(allowedDates), [allowedDates]);
+  const allowedSetFull = React.useMemo(() => new Set(allowedDateTimes), [allowedDateTimes]);
 
-  // Helpful bounds so the calendar opens to a relevant month even with huge lists
+  const allowedByDate = React.useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const dt of allowedDateTimes) {
+      const d = dt.slice(0, 10); // YYYY-MM-DD
+      const t = dt.slice(11); // HH:mm:ss
+      if (!map.has(d)) map.set(d, []);
+      map.get(d)!.push(t);
+    }
+    // sort times DESC so newest times show first for a date
+    for (const [k, arr] of map) {
+      arr.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+    }
+    return map;
+  }, [allowedDateTimes]);
+
+  const allowedDateSet = React.useMemo(() => new Set(Array.from(allowedByDate.keys())), [allowedByDate]);
+
   const { minAllowed, maxAllowed } = React.useMemo(() => {
-    if (!allowedDates.length) return { minAllowed: null as dayjs.Dayjs | null, maxAllowed: null as dayjs.Dayjs | null };
-    const sorted = [...allowedDates].sort(); // ascending
-    return { minAllowed: dayjs(sorted[0]), maxAllowed: dayjs(sorted[sorted.length - 1]) };
-  }, [allowedDates]);
+    if (!allowedDateTimes.length) return { minAllowed: null as dayjs.Dayjs | null, maxAllowed: null as dayjs.Dayjs | null };
+    const sorted = [...allowedDateTimes].sort();
+    return { minAllowed: dayjs(sorted[0], DATETIME_FMT), maxAllowed: dayjs(sorted[sorted.length - 1], DATETIME_FMT) };
+  }, [allowedDateTimes]);
 
   const getInputDates = () => {
     setLoadingDates(true);
@@ -56,49 +69,57 @@ const SearchBox: React.FC<ParamProps> = ({ refresh, url }) => {
           ? res.data
           : Array.isArray(res.data?.dates) ? res.data.dates : [];
 
-        // Normalize & de-dupe just in case
-        const normalized = Array.from(new Set(dates.map(String))).filter(Boolean);
+        const normalized = Array.from(
+          new Set(
+            dates
+              .map(String)
+              .map(s => (dayjs(s).isValid() ? dayjs(s).format(DATETIME_FMT) : s))
+          )
+        ).filter(Boolean);
 
-        // Sort DESC (newest first) to choose a sensible default
+        // newest first
         const sortedDesc = normalized.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
-        setAllowedDates(sortedDesc);
+        setAllowedDateTimes(sortedDesc);
 
         if (sortedDesc.length > 0) {
-          // Keep current selection if still valid; otherwise default to newest
-          setTime(prev => (allowedSet.has(prev) ? prev : sortedDesc[0]));
+          const newest = sortedDesc[0];
+          const d = newest.slice(0, 10);
+          const t = newest.slice(11);
+          setSelectedDate(d);
+          setSelectedTime(t);
+          setTime(`${d} ${t}`);
         } else {
-          setTime('');
+          setSelectedDate(today);
+          setSelectedTime('00:00:00');
+          setTime(`${today} 00:00:00`);
         }
       })
       .catch(error => {
-        if (error.response) {
-          console.error(t('unexpected_error'), error);
-          setErrorMessage(t('something_went_wrong'));
-        }
+        console.error(t('unexpected_error'), error);
+        setErrorMessage(t('something_went_wrong'));
       })
       .finally(() => setLoadingDates(false));
   };
 
-  const handleSearch = React.useCallback(() => {
-    if (!time) {
+  const handleSearch = React.useCallback((override?: string) => {
+    const effective = override ?? time;        // ← use the override if provided
+    if (!effective) {
       setErrorMessage(t('time_field_required'));
       return;
     }
-    if (allowedSet.size && !allowedSet.has(time)) {
-      setErrorMessage(t('selected_date_not_allowed') || 'Selected date is not allowed.');
+    if (allowedSetFull.size && !allowedSetFull.has(effective)) {
+      setErrorMessage(t('selected_date_not_allowed') || 'Selected date/time is not allowed.');
       return;
     }
 
     setErrorMessage('');
 
     const formData = new FormData();
-
-    formData.append('to', convertDateTime2(time));
-
+    formData.append('to', effective);
 
     api.post(url, formData)
       .then(res => {
-        refresh(res.data);
+        refresh(res.data?.filter(x => x.inventory?.name?.includes(name)));
       })
       .catch(error => {
         if (error?.response?.status === 422) {
@@ -108,28 +129,47 @@ const SearchBox: React.FC<ParamProps> = ({ refresh, url }) => {
           setErrorMessage(t('something_went_wrong'));
         }
       });
-  }, [time, allowedSet, refresh, t]);
+  }, [name, time, allowedSetFull, refresh, t]);
 
   React.useEffect(() => {
     getInputDates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-search when both parts form a valid, allowed datetime
   React.useEffect(() => {
-    if (time && (!allowedSet.size || allowedSet.has(time))) {
-      handleSearch();
+    if (selectedDate && selectedTime) {
+      const full = `${selectedDate} ${selectedTime}`;
+      setTime(full);
+      if (!allowedSetFull.size || allowedSetFull.has(full)) {
+        handleSearch(full);
+      }
     }
-  }, [handleSearch, allowedSet, time]);
+  }, [selectedDate, selectedTime, allowedSetFull]);
 
-  // Only enable dates from the server
   const shouldDisableDate = React.useCallback(
-    (d: Dayjs) => !allowedSet.has(d.format('YYYY-MM-DD')),
-    [allowedSet]
+    (d: Dayjs) => !allowedDateSet.has(d.format(DATE_FMT)),
+    [allowedDateSet]
   );
 
-  const pickerValue: Dayjs | null = time ? dayjs(time) : null;
+  // when date changes, snap time to first available for that date
+  const onDateChange = (d: Dayjs | null) => {
+    const v = d ? d.format(DATE_FMT) : '';
+    setSelectedDate(v);
+    if (v && allowedByDate.has(v)) {
+      const times = allowedByDate.get(v)!.sort();
+      setSelectedTime(times[0] || '');
+    } else {
+      setSelectedTime('');
+    }
+  };
 
-  // Keep dayjs itself in sync so formatting elsewhere matches
+  const timesForSelectedDate = React.useMemo(() => {
+    if (!selectedDate) return [] as string[];
+    return allowedByDate.get(selectedDate).sort() || [];
+  }, [allowedByDate, selectedDate]);
+
+  // Keep dayjs locale in sync
   React.useEffect(() => {
     dayjs.locale(locale);
   }, [locale]);
@@ -138,19 +178,11 @@ const SearchBox: React.FC<ParamProps> = ({ refresh, url }) => {
     <Box sx={{ mb: 2, position: 'relative', border: '2px solid #1ba3e1', borderRadius: 1, p: 2, mt: 2 }}>
       <Typography
         variant="subtitle2"
-        sx={{
-          position: 'absolute',
-          top: -10,
-          left: 12,
-          bgcolor: 'background.paper',
-          px: 1,
-          color: '#1ba3e1',
-          fontWeight: 500,
-          fontSize: '0.875rem',
-        }}
+        sx={{ position: 'absolute', top: -10, left: 12, bgcolor: 'background.paper', px: 1, color: '#1ba3e1', fontWeight: 500, fontSize: '0.875rem' }}
       >
         {t('inventory')}
       </Typography>
+
       <Grid container spacing={2} alignItems="center">
         {errorMessage && (
           <Grid size={{ xs: 12 }}>
@@ -158,44 +190,55 @@ const SearchBox: React.FC<ParamProps> = ({ refresh, url }) => {
           </Grid>
         )}
 
-        {/* ⬇️ Calendar UI with whitelist enforcement */}
-        <Grid size={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 2 }}>
+          <TextField
+            label={t('name')}
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Grid>
+
+        {/* Date picker */}
+        <Grid size={{ xs: 12, sm: 3, md: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={locale}>
             <DatePicker
-              label={t('search_time')}
-              value={pickerValue}
-              onChange={(d) => {
-                const v = d ? d.format('YYYY-MM-DD') : '';
-                setTime(v);
-              }}
-              disabled={loadingDates || allowedSet.size === 0}
+              label={t('search_date')}
+              value={selectedDate ? dayjs(selectedDate, DATE_FMT) : null}
+              onChange={onDateChange}
+              disabled={loadingDates || allowedDateSet.size === 0}
               shouldDisableDate={shouldDisableDate}
-              // Keep users in relevant range if you have bounds
-              minDate={minAllowed || undefined}
-              maxDate={maxAllowed || undefined}
-              // Optional: add a helper text for status
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  helperText:
-                    loadingDates
-                      ? (t('loading') || 'Loading…')
-                      : allowedSet.size === 0
-                        ? (t('no_available_dates') || 'No available dates')
-                        : undefined,
-                },
-              }}
+              slotProps={{ textField: { size: 'small', fullWidth: true, helperText: loadingDates ? (t('loading') || 'Loading…') : undefined } }}
             />
           </LocalizationProvider>
+        </Grid>
+
+        {/* Time select (only allowed times for chosen date) */}
+        <Grid size={{ xs: 12, sm: 3, md: 1 }}>
+          <FormControl fullWidth size="small" disabled={!selectedDate || timesForSelectedDate.length === 0}>
+            <InputLabel id="allowed-time-label">{t('count_number')}</InputLabel>
+            <Select
+              labelId="allowed-time-label"
+              label={t('count_number')}
+              value={selectedTime || ''}
+              onChange={(e) => setSelectedTime(String(e.target.value))}
+              MenuProps={{ PaperProps: { style: { maxHeight: 400 } } }}
+            >
+              {timesForSelectedDate.map((tstr, i) => (
+                <MenuItem key={tstr} value={tstr}>{i + 1}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
 
         <Grid size={{ xs: 'auto' }}>
           <IconButton
             color="primary"
             sx={{ mt: { xs: 0, sm: 0.5 } }}
-            onClick={handleSearch}
-            disabled={!time || (allowedSet.size > 0 && !allowedSet.has(time))}
+            onClick={() => handleSearch()}
+            disabled={!time || (allowedSetFull.size > 0 && !allowedSetFull.has(time))}
           >
             <SearchIcon />
           </IconButton>

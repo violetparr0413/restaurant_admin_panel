@@ -82,7 +82,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -91,7 +91,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={ipAddress}
@@ -100,7 +100,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
                         label={t('ip_address')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={port}
@@ -109,7 +109,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ exist, onBack, onSave }) => {
                         label={t('port')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <FormControl fullWidth variant="outlined">
                         <InputLabel>{t('position')}</InputLabel>
                         <Select

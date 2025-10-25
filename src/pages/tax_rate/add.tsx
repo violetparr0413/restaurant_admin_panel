@@ -64,7 +64,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -73,7 +73,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={value}

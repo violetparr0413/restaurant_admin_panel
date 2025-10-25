@@ -89,7 +89,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField
                             value={name}
@@ -102,7 +102,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         <PasswordInput password={password} setPassword={setPassword} required={true} />
                     </Box>
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <Select
                         value={role}
                         onChange={(e) => setRole(e.target.value as string)}
@@ -123,7 +123,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                 <Switch checked={allowUpdateStock} onChange={(e) => setAllowUpdateStock(e.target.checked)} name="gilad" />
                             }
                             sx={{ mt: 1 }}
-                            label={t('allow_update_stock')}
+                            label={''}
                         />
                     </FormControl>
                 </TableCell>
@@ -134,7 +134,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                 <Switch checked={allowPurchase} onChange={(e) => setAllowPurchase(e.target.checked)} name="gilad" />
                             }
                             sx={{ mt: 1 }}
-                            label={t('allow_purchase')}
+                            label={''}
                         />
                     </FormControl>
                 </TableCell>
@@ -145,7 +145,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                 <Switch checked={allowReceive} onChange={(e) => setAllowReceive(e.target.checked)} name="gilad" />
                             }
                             sx={{ mt: 1 }}
-                            label={t('allow_receive')}
+                            label={''}
                         />
                     </FormControl>
                 </TableCell>
@@ -156,7 +156,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                 <Switch checked={allowReport} onChange={(e) => setAllowReport(e.target.checked)} name="gilad" />
                             }
                             sx={{ mt: 1 }}
-                            label={t('allow_report')}
+                            label={''}
                         />
                     </FormControl>)}
                 </TableCell>
@@ -167,7 +167,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                                 <Switch checked={allowEditAttributes} onChange={(e) => setAllowEditAttributes(e.target.checked)} name="gilad" />
                             }
                             sx={{ mt: 1 }}
-                            label={t('allow_edit_dishes')}
+                            label={''}
                         />
                     </FormControl>)}
                 </TableCell>

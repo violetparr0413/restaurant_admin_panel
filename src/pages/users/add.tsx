@@ -79,7 +79,7 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{ padding: 8 }}>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField
                             value={name}
@@ -92,13 +92,12 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
                         <PasswordInput password={password} setPassword={setPassword} required={true} />
                     </Box>
                 </TableCell>
-                <TableCell>
-                    <FormControl fullWidth variant="outlined">
+                <TableCell style={{ padding: 8 }}>
+                    <FormControl fullWidth>
                         <InputLabel>{t('role')}</InputLabel>
                         <Select
                             value={role}
                             onChange={(e) => setRole(e.target.value as string)}
-                            displayEmpty
                             label={t('role')}
                         >
                             <MenuItem value={0} disabled>{t('select')}</MenuItem>

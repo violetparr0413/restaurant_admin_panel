@@ -309,23 +309,49 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
         setCart(prev => {
             const existing = prev.find(ci => ci.dish.dish_id === dish.dish_id);
             if (existing) {
-                return prev.map(ci =>
-                    ci.dish.dish_id === dish.dish_id
-                        ? { ...ci, qty: Math.max(0, ci.qty + qty) }
-                        : ci
-                );
+                return prev
+                    .map(ci => (ci.dish.dish_id === dish.dish_id ? { ...ci, qty: Math.max(0, ci.qty + qty) } : ci))
+                    .filter(ci => ci.qty > 0);
             }
             return [...prev, { order_id, dish, qty }];
         });
     }, []);
 
     const setItemQty = (dishId: number, qty: number) => {
-        setCart(prev => prev.map(ci =>
-            ci.dish.dish_id === dishId ? { ...ci, qty: Math.max(0, qty) } : ci
-        ));
+        setCart(prev => prev
+            .map(ci => (ci.dish.dish_id === dishId ? { ...ci, qty: Math.max(0, qty) } : ci))
+            .filter(ci => ci.qty > 0));
     };
 
     const cartTotal = useMemo(() => cart.reduce((sum, ci) => sum + ci.qty * ci.dish.dish_price, 0), [cart]);
+
+    const postUpdateQty = useCallback(
+        async (updates: { order_id: number; order_qty: number }[]) => {
+            try {
+                await clientApi.post("/update-order-qty", { data: updates });
+            } catch (error: any) {
+                if (error.response) {
+                    console.error(t("unexpected_error"), error);
+                }
+            }
+        },
+        [t]
+    );
+
+    // Optimistic local update + sync to backend per click
+    const changeItemQty = useCallback((dishId: number, delta: number) => {
+        setCart(prev => {
+            const next = prev.map(ci => (ci.dish.dish_id === dishId ? { ...ci, qty: Math.max(0, ci.qty + delta) } : ci))
+
+            // find the updated item to send its new qty
+            const updated = next.find(ci => ci.dish.dish_id === dishId);
+            if (updated) {
+                // fire-and-forget; UI already optimistic
+                postUpdateQty([{ order_id: updated.order_id, order_qty: updated.qty }]);
+            }
+            return next.filter(ci => ci.qty > 0);
+        });
+    }, [postUpdateQty]);
 
     // -------- Order helpers
     const commitOrder = () => {
@@ -345,12 +371,12 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                         .then(() => {
                             const record: OrderRecord = {
                                 id: `ord_${Date.now()}`,
-                                items: cart.filter(ci => ci.qty > 0).map(ci => ({ ...ci })),
+                                items: cart.map(ci => ({ ...ci })),
                                 total: cartTotal,
                                 createdAt: Date.now(),
                             };
 
-                            if (record.items.length > 0) setOrderHistory(prev => [record, ...prev]);
+                            setOrderHistory(prev => [record, ...prev]);
                             setCart([]);
                             setCartCount(0);
                         }).catch((error) => {
@@ -376,11 +402,11 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     };
 
     const confirmService = () => {
-        const requested = services.filter(s => s.qty > 0);
-        if (requested.length === 0) {
-            setServiceOpen(false);
-            return;
-        }
+        // const requested = services.filter(s => s.qty > 0);
+        // if (requested.length === 0) {
+        //     setServiceOpen(false);
+        //     return;
+        // }
         clientApi
             .post("/service-history", {
                 data: services.map(ci => ({
@@ -490,6 +516,65 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     const youtubeId = getYouTubeId(dishDrawer.dish?.youtube_url);
     const isTiny = useMediaQuery("(max-width:360px)");
 
+    const [requireSettings, setRequireSettings] = useState([]);
+    const [unRequireSettings, setUnRequireSettings] = useState([]);
+    const [dishPrice, setDishPrice] = useState(0);
+    const [selectedExtraSettings, setSelectedExtraSettings] = useState([]);
+
+    // Initialize required and unrequired settings
+    useEffect(() => {
+        if (dishDrawer?.dish) {
+            try {
+                const extraSettings = JSON.parse(dishDrawer.dish.extra_setting || '[]');
+
+                const requiredSettings = extraSettings.filter(item => item.is_required === 1);
+                const unrequiredSettings = extraSettings.filter(item => item.is_required === 0);
+
+                setRequireSettings(requiredSettings);
+                setUnRequireSettings(unrequiredSettings);
+
+                // calculate initial price including required extras
+                let initialPrice = Number(dishDrawer.dish.dish_price) || 0;
+                requiredSettings.forEach(setting => {
+                    initialPrice += Number(setting.extra_price) || 0;
+                });
+
+                setDishPrice(initialPrice);
+            } catch (error) {
+                console.error('Invalid JSON in extra_setting:', error);
+            }
+        }
+    }, [dishDrawer]);
+
+    // Toggle selection of unrequired extras
+    function selectExtraSetting(setting) {
+        setSelectedExtraSettings(prev => {
+            const exists = prev.find(item => item.name === setting.name);
+            if (exists) {
+                return prev.filter(item => item.name !== setting.name);
+            } else {
+                return [...prev, setting];
+            }
+        });
+    }
+
+    // Recalculate dish price whenever selection changes
+    useEffect(() => {
+        const basePrice = Number(dishDrawer?.dish?.dish_price || 0);
+
+        const requiredTotal = requireSettings.reduce(
+            (sum, s) => sum + Number(s.extra_price || 0),
+            0
+        );
+
+        const selectedTotal = selectedExtraSettings.reduce(
+            (sum, s) => sum + Number(s.extra_price || 0),
+            0
+        );
+
+        setDishPrice(basePrice + requiredTotal + selectedTotal);
+    }, [requireSettings, selectedExtraSettings, dishDrawer?.dish?.dish_price]);
+
     return (
         <ClientUIContext.Provider value={value}>
             {props.children}
@@ -510,14 +595,14 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                     sx={{
                         flexShrink: 0,
                         mt: 2, mb: 2,
-                        height: 250,
+                        height: 200,
                         borderRadius: 2,
                         pointerEvents: "none",   // non-interactive (no play UI)
                     }}
                 />) : (<Box sx={{
                     flexShrink: 0,
                     mt: 2, mb: 2,
-                    height: 250,
+                    height: 200,
                     borderRadius: 2,
                     backgroundImage: youtubeId
                         ? "none"
@@ -567,10 +652,35 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                             borderLeft: (theme) => `1px solid ${theme.palette.divider}`, // subtle visual separator
                         }}
                     >
-                        {formatJPY(dishDrawer.dish?.dish_price ?? 0)}
+                        {formatJPY(dishPrice ?? 0)}
                     </Typography>
                 </Box>
 
+                <Box className="overflow-scroll py-3">
+                    <Box className="flex gap-2 flex-wrap">
+                        {
+                            requireSettings.map((setting, index) => {
+                                return (
+                                    <Box key={index} className="rounded-2xl bg-[#ffc83d] px-2 py-1">
+                                        {setting.name + "+" + setting.extra_price}
+                                    </Box>
+                                )
+                            })
+                        }
+
+                    </Box>
+                    <Box className="flex gap-2 flex-wrap mt-3">
+                        {
+                            unRequireSettings.map((setting, index) => {
+                                return (
+                                    <Box key={index} className={"rounded-lg border-[#ffc83d] border-2 px-2 py-1 " + (selectedExtraSettings.some(s => s.name === setting.name) ? 'bg-[#ffc83d]' : "bg-white")} onClick={() => selectExtraSetting(setting)}>
+                                        {setting.name + "+" + setting.extra_price}
+                                    </Box>
+                                )
+                            })
+                        }
+                    </Box>
+                </Box>
                 <Box sx={{ flexGrow: 1 }} />
 
                 <FooterBar>
@@ -601,16 +711,21 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                         }}
                         onClick={() => {
                             if (dishDrawer.dish) {
+                                const extras = [
+                                    ...requireSettings.map(s => ({ name: s.name, price: Number(s.extra_price) || 0 })),
+                                    ...selectedExtraSettings.map(s => ({ name: s.name, price: Number(s.extra_price) || 0 })),
+                                ];
                                 clientApi
                                     .post("/order", {
                                         dish_id: dishDrawer.dish.dish_id,
                                         order_qty: dishDrawer.qty,
                                         order_status: "INCART",
+                                        extra_setting: extras,
                                     })
                                     .then((res) => {
-                                        console.log("Added to cart:", res.data);
+                                        // console.log("Added to cart:", res.data);
                                         // getIncartOrder();
-                                        addToCart(res.data.order_id, dishDrawer.dish, dishDrawer.qty)
+                                        addToCart(res.data.order_id, res.data.dish, dishDrawer.qty)
                                     });
                             };
                             setDishDrawer(p => ({ ...p, open: false }));
@@ -634,7 +749,6 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                             {cart.map((ci) => {
                                 const dishName = getDishName(ci.dish);
                                 const price = formatJPY(ci.dish.dish_price);
-                                const isCanceled = ci.qty === 0;
 
                                 return (
                                     <ListItem
@@ -644,16 +758,17 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                                             <QtyStepper
                                                 size="small"
                                                 value={ci.qty}
-                                                onDec={() => setItemQty(ci.dish.dish_id, ci.qty - 1)}
-                                                onInc={() => setItemQty(ci.dish.dish_id, ci.qty + 1)}
+                                                onDec={() => changeItemQty(ci.dish.dish_id, -1)}
+                                                onInc={() => changeItemQty(ci.dish.dish_id, +1)}
                                             />
                                         }
                                         sx={{
                                             display: "flex",
                                             alignItems: "center",
                                             "& .MuiListItemText-root": { minWidth: 0 },
-                                            "& .MuiListItemSecondaryAction-root": { right: 0 },
-                                            opacity: isCanceled ? 0.85 : 1,
+                                            "& .MuiListItemSecondaryAction-root": {
+                                                right: 0, // move secondaryAction 16px from the right
+                                            },
                                         }}
                                     >
                                         <ListItemAvatar>
@@ -661,7 +776,6 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                                                 variant="rounded"
                                                 src={`${backendUrl}/${ci.dish?.dish_image ?? ""}`}
                                                 alt={dishName}
-                                                sx={isCanceled ? { filter: "grayscale(1)", opacity: 0.6 } : undefined}
                                             />
                                         </ListItemAvatar>
 
@@ -691,14 +805,6 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
                                                 primary={dishName}
                                                 secondary={price}
                                                 onClick={() => handleCartTooltipToggle(ci.dish.dish_id)}
-                                                primaryTypographyProps={{
-                                                    sx: isCanceled ? { color: "text.disabled" } : undefined,
-                                                }}
-                                                secondaryTypographyProps={{
-                                                    sx: isCanceled
-                                                        ? { color: "error.main", textDecoration: "line-through", fontWeight: 700 }
-                                                        : undefined,
-                                                }}
                                                 sx={{
                                                     flex: 1,
                                                     minWidth: 0,

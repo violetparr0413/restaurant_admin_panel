@@ -225,13 +225,13 @@ export default function Page({ rows, info, error }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell sx={{ width: 300 }}>{t('name')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 280 }}>{t('name')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>{t('role')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 120 }}>{t('allow_update_stock')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 120 }}>{t('allow_purchase')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 120 }}>{t('allow_receive')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 120 }}>{t('allow_report')}</StyledTableCell>
-                        <StyledTableCell sx={{ width: 120 }}>{t('allow_edit_dishes')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 150 }}>{t('allow_update_stock')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 130 }}>{t('allow_purchase')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 130 }}>{t('allow_receive')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 130 }}>{t('allow_report')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 140 }}>{t('allow_edit_dishes')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 180 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 240 }}>
                             <IconButton aria-label="add"

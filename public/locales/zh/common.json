@@ -225,5 +225,17 @@
   "printable_text": "可打印文本",
   "name_has_already_been_taken": "该名称已被占用",
   "add": "添加",
-  "total_price": "总价"
+  "total_price": "总价",
+  "date_time": "日期时间",
+  "multiple_stock_check": "多项库存检查",
+  "update_success": "更新成功",
+  "search_date": "搜索日期",
+  "time_field_required": "时间字段为必填项",
+  "selected_date_not_allowed": "所选日期不允许",
+  "count_number": "棚卸回数",
+  "modify_multiple_stock": "修改多项库存",
+  "confirm_delete": "确认删除",
+  "cancel": "取消",
+  "delete": "删除",
+  "are_you_really_delete_dishes": "您确定要删除所有菜品信息吗？"
 }

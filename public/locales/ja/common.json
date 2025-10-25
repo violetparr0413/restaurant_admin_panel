@@ -225,5 +225,17 @@
   "printable_text": "印刷可能なテキスト",
   "name_has_already_been_taken": "その名前は既に使用されています",
   "add": "追加",
-  "total_price": "合計金額"
+  "total_price": "合計金額",
+  "date_time": "日時",
+  "multiple_stock_check": "複数在庫チェック",
+  "update_success": "更新に成功しました",
+  "search_date": "検索日",
+  "time_field_required": "時間フィールドは必須です",
+  "selected_date_not_allowed": "選択された日付は許可されていません",
+  "count_number": "盤點次數",
+  "modify_multiple_stock": "複数在庫の変更",
+  "confirm_delete": "削除の確認",
+  "cancel": "キャンセル",
+  "delete": "削除",
+  "are_you_really_delete_dishes": "すべての料理情報を削除してもよろしいですか？"
 }

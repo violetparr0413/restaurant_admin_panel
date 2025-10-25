@@ -189,7 +189,7 @@ export default function Page({ rows }: TableProps) {
             <Table sx={{ tableLayout: 'fixed' }} stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell>{t('username')}</StyledTableCell>
+                        <StyledTableCell sx={{ width: 320 }}>{t('username')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>{t('role')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 200 }} align="right">{t('created_at')}</StyledTableCell>
                         <StyledTableCell sx={{ width: 160 }}>

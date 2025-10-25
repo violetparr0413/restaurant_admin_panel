@@ -225,5 +225,17 @@
   "printable_text": "Printable Text",
   "name_has_already_been_taken": "The name has already been taken",
   "add": "Add",
-  "total_price": "Total Price"
+  "total_price": "Total Price",
+  "date_time": "Date Time",
+  "multiple_stock_check": "Multiple Stock Check",
+  "update_success": "Updated successfully",
+  "search_date": "Search Date",
+  "time_field_required": "Time field required",
+  "selected_date_not_allowed": "Selected date not allowed",
+  "count_number": "Count Number",
+  "modify_multiple_stock": "Modify Multiple Stock",
+  "confirm_delete": "Confirm Delete",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "are_you_really_delete_dishes": "Are you sure you want to delete all dish information?"
 }

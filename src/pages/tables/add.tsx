@@ -65,23 +65,23 @@ const AddPanel: React.FC<AddPanelProps> = ({ onBack, onSave }) => {
             <TableRow>
                 <TableCell>
                 </TableCell>
-                <TableCell>
+                <TableCell style={{ padding: 8 }}>
                     <TextField
+                        fullWidth
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('name')}
                         label={t('name')}
-                        size="small"
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{ padding: 8 }}>
                     <TextField
+                        fullWidth
                         value={numOfPeople}
                         onChange={(e) => setNumOfPeople(Number(e.target.value))}
                         placeholder={t('number_of_people')}
                         label={t('number_of_people')}
                         type="number"
-                        size="small"
                     />
                 </TableCell>
                 <TableCell align="right"></TableCell>

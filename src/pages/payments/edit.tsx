@@ -63,7 +63,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ row, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}

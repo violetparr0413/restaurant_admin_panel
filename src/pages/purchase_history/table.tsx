@@ -20,7 +20,7 @@ import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import { PurchaseHistory } from '../../utils/info';
 
 import { useTranslation } from 'next-i18next';
-import { convertDateTime, safeJsonParseArray } from '@/utils/http_helper';
+import { convertDateTime, formatNumber, safeJsonParseArray } from '@/utils/http_helper';
 import { useRouter } from 'next/router';
 import ImagePreview from '@/_components/ImagePreview';
 import EditPanel from './edit';
@@ -280,7 +280,7 @@ export default function Page({ rows }: TableProps) {
                             </TableSortLabel>
                         </StyledTableCell>
 
-                        <StyledTableCell sx={{ width: 120 }} sortDirection={orderBy === 'action' ? order : false}>
+                        <StyledTableCell sx={{ width: 140 }} sortDirection={orderBy === 'action' ? order : false}>
                             <TableSortLabel
                                 active={orderBy === 'action'}
                                 direction={orderBy === 'action' ? order : 'asc'}
@@ -344,13 +344,13 @@ export default function Page({ rows }: TableProps) {
                                 </TableCell>
                                 <TableCell>{row?.user?.username}</TableCell>
                                 <TableCell align="right">
-                                    {row?.action === 'INPUT' ? '--' : `${row?.request_amount} ${row?.inventory?.unit.unit_name}`}
+                                    {row?.action === 'INPUT' ? '--' : `${formatNumber(row?.request_amount)} ${row?.inventory?.unit.unit_name}`}
                                 </TableCell>
                                 <TableCell align="right">
-                                    {row?.action === 'INPUT' ? '--' : `${row?.amount} ${row?.inventory?.unit.unit_name}`}
+                                    {row?.action === 'INPUT' ? '--' : `${formatNumber(row?.amount)} ${row?.inventory?.unit.unit_name}`}
                                 </TableCell>
                                 <TableCell>{row?.action === 'INPUT'
-                                    ? `${row?.action} (${row?.amount} ${row?.inventory?.unit.unit_name})`
+                                    ? `${row?.action} (${formatNumber(row?.amount)} ${row?.inventory?.unit.unit_name})`
                                     : row?.action}
                                 </TableCell>
                                 <TableCell>{row?.employee?.name}</TableCell>

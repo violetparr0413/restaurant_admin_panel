@@ -67,7 +67,7 @@ const Panel: React.FC<PanelParams> = ({ row, onBack, onSave }) => {
                     </TableCell>
                 </TableRow>)}
             <TableRow>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={name}
@@ -76,7 +76,7 @@ const Panel: React.FC<PanelParams> = ({ row, onBack, onSave }) => {
                         label={t('name')}
                     />
                 </TableCell>
-                <TableCell>
+                <TableCell style={{padding: 8}}>
                     <TextField
                         fullWidth
                         value={value}
