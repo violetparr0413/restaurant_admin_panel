@@ -164,7 +164,7 @@ export default function Page({ headers, rows }: TableProps) {
                         <col style={{ width: 140 }} />
                         {/* one fixed-width <col> for every numbered date column */}
                         {headerGroups.flatMap((g) =>
-                            g.keys.map(() => <col key={crypto.randomUUID()} style={{ width: 108 }} />)
+                            g.keys.map(() => <col style={{ width: 108 }} />)
                         )}
                     </colgroup>
                     <TableHead>

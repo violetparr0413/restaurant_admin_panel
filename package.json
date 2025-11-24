@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS=--insecure-http-parser next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS=--insecure-http-parser next start",
     "lint": "next lint",
     "export": "next export"
   },
@@ -20,8 +20,10 @@
     "axios": "^1.10.0",
     "dayjs": "^1.11.18",
     "i18next": "^25.3.2",
+    "js-cookie": "^3.0.5",
     "next": "15.3.5",
     "next-i18next": "^15.4.2",
+    "nookies": "^2.5.2",
     "react": "^19.0.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^19.0.0",

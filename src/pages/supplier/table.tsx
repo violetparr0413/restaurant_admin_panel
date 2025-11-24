@@ -106,13 +106,19 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
 interface TableProps {
     rows: Supplier[];
+    onDataChange?: () => void;
 }
 
-export default function Page({ rows }: TableProps) {
+export default function Page({ rows, onDataChange }: TableProps) {
     const { t } = useTranslation('common')
 
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    // ✅ Load pagination state from storage (safe with SSR guard)
+    const getInitialTableState = () => {
+        return { page: 0, rowsPerPage: 10 };
+    };
+
+    const [pagination, setPagination] = React.useState(getInitialTableState);
+    const { page, rowsPerPage } = pagination;
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
@@ -131,6 +137,11 @@ export default function Page({ rows }: TableProps) {
         setRows(rows);
     }, [rows]);
 
+    const updateRows = (newRows: Supplier[]) => {
+        setRows(newRows);
+        if (onDataChange) onDataChange();
+    };
+
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rowsData?.length) : 0;
@@ -139,14 +150,13 @@ export default function Page({ rows }: TableProps) {
         event: React.MouseEvent<HTMLButtonElement> | null,
         newPage: number,
     ) => {
-        setPage(newPage);
+        setPagination((prev) => ({ ...prev, page: newPage }));
     };
 
     const handleChangeRowsPerPage = (
         event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+        setPagination({ page: 0, rowsPerPage: parseInt(event.target.value, 10) });
     };
 
     const handleBackClick = () => {
@@ -155,9 +165,11 @@ export default function Page({ rows }: TableProps) {
     };
 
     const handleSaveClick = (data: Supplier) => {
-        rowsData?.find(x => x.supplier_id === data.supplier_id) ?
-            setRows(rowsData => rowsData?.map(x => x.supplier_id === data.supplier_id ? data : x))
-            : setRows([...rowsData, data])
+        const updated = rowsData?.find(x => x.supplier_id === data.supplier_id)
+            ? rowsData.map(x => (x.supplier_id === data.supplier_id ? data : x))
+            : [...rowsData, data];
+
+        updateRows(updated);
         setView('hide');
     };
 
@@ -176,9 +188,8 @@ export default function Page({ rows }: TableProps) {
     };
 
     const handleDeleteReq = (data: Supplier) => {
-        const index = rowsData?.indexOf(data)
-        if (index !== -1) rowsData?.splice(index, 1);
-        setRows(rowsData?.filter(row => row !== data))
+        const updated = rowsData.filter(row => row.supplier_id !== data.supplier_id);
+        updateRows(updated);
     }
 
     return (

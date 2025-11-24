@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import PasswordInput from '@/_components/PasswordInput';
 import LanguageSwitcher from '@/_components/LanguageSwitcher/LanguageSwitcher';
+import Cookies from "js-cookie";
 
 interface ILoginResponse {
   status: string;
@@ -37,7 +38,11 @@ export default function SignInPage() {
       })).data;
 
       if (response.status == 'success') {
-        localStorage.setItem('token', response.access_token!);
+        Cookies.set("token", response.access_token!, {
+          // secure: true,          // only over HTTPS
+          sameSite: "lax",    // prevent CSRF
+          expires: 7             // days
+        });
         router.push('/dashboard');
       } else {
         setErrorMessage(t(`login.invalid_credentials`));

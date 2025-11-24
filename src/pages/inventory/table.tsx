@@ -20,7 +20,7 @@ import PlaylistAddCheckOutlinedIcon from '@mui/icons-material/PlaylistAddCheckOu
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PostAddIcon from '@mui/icons-material/PostAdd';
-import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
+import { Celebration, KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 
 import { Inventory } from '../../utils/info';
 import AddPanel from './add';
@@ -172,49 +172,56 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
   const [focusedInventoryId, setFocusedInventoryId] = React.useState<number | null>(null);
   const pollTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const INVENTORY_CHECK_ACTIVE_KEY = 'inventory_check_active';
-
-  const markInventoryCheckActive = () => {
-    try { localStorage.setItem(INVENTORY_CHECK_ACTIVE_KEY, '1'); } catch { }
-  };
-  const clearInventoryCheckActive = () => {
-    try { localStorage.removeItem(INVENTORY_CHECK_ACTIVE_KEY); } catch { }
-  };
-  const isInventoryCheckActive = () => {
-    try { return localStorage.getItem(INVENTORY_CHECK_ACTIVE_KEY) === '1'; } catch { return false; }
-  };
+  const ignoreActiveCheckRef = React.useRef(false);
 
   const startInventoryCheckSession = () => {
     return api.post('/start-inventory-check').catch(() => {/* ignore to keep flow smooth */ });
   };
 
-  const fetchInventoryCheckValues = React.useCallback(() => {
-    api.get('/get-inventory-check-values')
-      .then((res) => {
-        const list: Array<{ inventory_id: number; value: number | null }> = res?.data?.data ?? [];
-        setStockDrafts(prev => {
-          const next = { ...prev };
-          for (const item of list) {
-            const id = item.inventory_id;
-            if (focusedInventoryId === id) continue; // do not overwrite focused input
-            const valStr = (item.value === null || item.value === undefined) ? '' : String(item.value);
-            next[id] = {
-              inventory_id: id,
-              stock: valStr,
-              date: time,
-            };
-          }
-          return next;
-        });
-      })
-      .catch((err) => {
-        console.error(t('unexpected_error'), err);
+  const fetchInventoryCheckValues = React.useCallback(async () => {
+    try {
+      const res = await api.get('/get-inventory-check-values');
+      const list: Array<{ inventory_id: number; value: number | null }> = res?.data?.data ?? [];
+
+      // ✅ When list is empty, inventory check is no longer active
+      if (list.length === 0) {
+        // stop polling
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+
+        // notify other pages
+        window.dispatchEvent(new Event('inventory:refresh-input-dates'));
+
+        // go back to normal view
+        setView('hide');
+        return;
+      }
+
+      // ✅ otherwise, update stockDrafts
+      setStockDrafts(prev => {
+        const next = { ...prev };
+        for (const item of list) {
+          const id = item.inventory_id;
+          if (focusedInventoryId === id) continue; // don't overwrite focused input
+          const valStr = (item.value === null || item.value === undefined) ? '' : String(item.value);
+          next[id] = {
+            inventory_id: id,
+            stock: valStr,
+            date: time,
+          };
+        }
+        return next;
       });
+    } catch (err) {
+      console.error(t('unexpected_error'), err);
+    }
   }, [focusedInventoryId, time, t]);
+
 
   React.useEffect(() => {
     if (view === 'stock') {
-      // start polling every 1s
       fetchInventoryCheckValues(); // immediate first pull
       pollTimerRef.current = setInterval(fetchInventoryCheckValues, 1000);
       return () => {
@@ -222,6 +229,7 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
         pollTimerRef.current = null;
       };
     }
+
     // ensure timer cleared if view changes away from stock
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
@@ -229,24 +237,48 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
     }
   }, [view, fetchInventoryCheckValues]);
 
+
+
+  const checkInventoryCheckActive = React.useCallback(async () => {
+    try {
+      const res = await api.get('/get-inventory-check-values');
+      const list = res?.data?.data ?? [];
+      return list.length > 0; // active if length > 0
+    } catch (err) {
+      console.error(t('unexpected_error'), err);
+      return false;
+    }
+  }, [t]);
+
+
   React.useEffect(() => {
-    if (!isInventoryCheckActive()) return;
+    if (view === 'stock') return; // don't check when editing stock
 
-    // Recreate the same state as clicking the button
-    // startInventoryCheckSession();
+    let cancelled = false;
 
-    setStockDrafts(() => {
-      const m: StockDraftMap = {};
-      rowsData?.forEach(r => {
-        m[r.inventory_id] = { inventory_id: r.inventory_id, stock: '', date: time };
-      });
-      return m;
-    });
+    const pollActiveStatus = async () => {
+      if (ignoreActiveCheckRef.current) return; // skip if temporarily disabled
+      const active = await checkInventoryCheckActive();
+      if (!cancelled && active) {
+        setStockDrafts(() => {
+          const m: StockDraftMap = {};
+          rowsData?.forEach(r => {
+            m[r.inventory_id] = { inventory_id: r.inventory_id, stock: '', date: time };
+          });
+          return m;
+        });
+        setView('stock');
+      }
+    };
 
-    setView('stock'); // <-- triggers your existing poller effect
-    // note: do NOT clear the flag here; it remains until Save/Back ends the session
-    // focusedInventoryId stays null, so polling can populate values immediately
-  }, []); // run once on mount of /inventory
+    pollActiveStatus(); // initial check
+    const interval = setInterval(pollActiveStatus, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [view, checkInventoryCheckActive, rowsData, time]);
+
 
   const debouncersRef = React.useRef<Record<number, ReturnType<typeof setTimeout> | null>>({});
   const clearDebounce = (id: number) => {
@@ -378,18 +410,19 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
   };
 
   const handleBackClick = () => {
-    // Stop polling
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
 
-    // If backing out of stock mode, end the check session
     if (view === 'stock') {
       api.post('/end-inventory-check').catch(err => {
         console.error(t('unexpected_error'), err);
       });
-      clearInventoryCheckActive();
+
+      // 👇 Temporarily ignore polling for a short while
+      ignoreActiveCheckRef.current = true;
+      setTimeout(() => { ignoreActiveCheckRef.current = false; }, 2000);
     }
 
     setView('hide');
@@ -399,6 +432,7 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
     setIsShow(false);
     setFilterSupplierId(0);
   };
+
 
 
   const handleSaveClick = (data: Inventory) => {
@@ -428,8 +462,9 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
   };
 
   const handleStockClick = () => {
+    ignoreActiveCheckRef.current = true;
+    setTimeout(() => { ignoreActiveCheckRef.current = false; }, 2000);
 
-    markInventoryCheckActive();
     startInventoryCheckSession();
 
     setStockDrafts(() => {
@@ -437,7 +472,7 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
       rowsData?.forEach(r => {
         m[r.inventory_id] = {
           inventory_id: r.inventory_id,
-          stock: '', // default empty; will be filled from /get-inventory-check-values
+          stock: '',
           date: time,
         };
       });
@@ -446,6 +481,7 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
 
     setView('stock');
   };
+
 
 
   const handleModifyClick = () => {
@@ -525,7 +561,6 @@ export default function Page({ time, rows, info, error, setIsShow, filterSupplie
       // If saving from STOCK mode, end the check session
       if (view === 'stock') {
         await api.post('/end-inventory-check');
-        clearInventoryCheckActive();
       }
 
       await api.post('/update-inventory', param);

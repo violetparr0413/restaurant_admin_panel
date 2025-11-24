@@ -124,8 +124,12 @@ export default function Page({ rows }: TableProps) {
         t('extra'),
     ];
 
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const getInitialTableState = () => {
+        return { page: 0, rowsPerPage: 10 };
+    };
+
+    const [pagination, setPagination] = React.useState(getInitialTableState);
+    const { page, rowsPerPage } = pagination;
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
@@ -148,18 +152,12 @@ export default function Page({ rows }: TableProps) {
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rowsData?.length) : 0;
 
-    const handleChangePage = (
-        event: React.MouseEvent<HTMLButtonElement> | null,
-        newPage: number,
-    ) => {
-        setPage(newPage);
+    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPagination((prev) => ({ ...prev, page: newPage }));
     };
 
-    const handleChangeRowsPerPage = (
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setPagination({ page: 0, rowsPerPage: parseInt(event.target.value, 10) });
     };
 
     const handleBackClick = () => {

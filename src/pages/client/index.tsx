@@ -17,12 +17,14 @@ export async function getStaticProps({ locale }: { locale: string }) {
 }
 
 const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL2;
+
 export default function Client() {
   const { t } = useTranslation("common");
   const [logoPath, setLogoPath] = useState("");
   const [backgroundImages, setBackgroundImages] = useState<string[]>([]);
   const [duration, setDuration] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loggedin, setLoggedin] = useState(false)
 
   const getBrandInfo = useCallback(async () => {
     clientApi
@@ -61,6 +63,12 @@ export default function Client() {
   if (!backgroundImages) {
     return <div>{t("loading")}...</div>;
   }
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      setLoggedin(true)
+    }
+  }, [])
 
   return (
     <>
@@ -118,15 +126,18 @@ export default function Client() {
               width={200}
               height={200}
             />
-            <Link href={"/client/select-language"}>
-              <Button
-                className="w-[200px] !mt-3 !text-black !bg-[#ffc83d]"
-                variant="contained"
-                startIcon={<ArrowForwardIcon />}
-              >
-                {t("start_ordering")}
-              </Button>
-            </Link>
+            {loggedin && (
+              <Link href={"/client/select-language"}>
+                <Button
+                  className="w-[200px] !mt-3 !text-black !bg-[#ffc83d]"
+                  variant="contained"
+                  startIcon={<ArrowForwardIcon />}
+                >
+                  {t("start_ordering")}
+                </Button>
+              </Link>
+            )}
+
           </Box>
         </Box>
       </Box>

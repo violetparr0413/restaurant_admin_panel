@@ -39,9 +39,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 
 interface TableProps {
     rows: Printer[];
+    onDataChange: () => void;
 }
 
-export default function Page({ rows }: TableProps) {
+export default function Page({ rows, onDataChange }: TableProps) {
     const { t } = useTranslation('common')
 
     const [rowsData, setRows] = React.useState(rows);
@@ -59,15 +60,22 @@ export default function Page({ rows }: TableProps) {
         "KITCHEN": t('kitchen'),
     }
 
+    const updateRows = (newRows: Printer[]) => {
+        setRows(newRows);
+        onDataChange(); // ✅ notify parent to update cache
+    };
+
     const handleBackClick = () => {
         setView('hide');
         setEditItem(null);
     };
 
     const handleSaveClick = (data: Printer) => {
-        rowsData?.find(x => x.printer_id === data.printer_id) ?
-            setRows(rowsData => rowsData?.map(x => x.printer_id === data.printer_id ? data : x))
-            : setRows([...rowsData, data])
+        const updated = rowsData?.find(x => x.printer_id === data.printer_id)
+            ? rowsData.map(x => (x.printer_id === data.printer_id ? data : x))
+            : [...rowsData, data];
+
+        updateRows(updated);
         setView('hide');
     };
 
@@ -86,8 +94,8 @@ export default function Page({ rows }: TableProps) {
     };
 
     const handleDeleteReq = (data: Printer) => {
-        const index = rowsData?.indexOf(data)
-        if (index !== -1) rowsData?.splice(index, 1);
+        const updated = rowsData.filter(row => row.printer_id !== data.printer_id);
+        updateRows(updated);
         setRows(rowsData?.filter(row => row !== data))
     }
 

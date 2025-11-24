@@ -1,24 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Table from './table';
-import api from '@/utils/http_helper';
 import { Dish } from '../../utils/info';
 
-import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { Alert, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import DishSearchBox from '@/_components/dish/DishSearchBox';
+import nookies from "nookies";
+import axios from 'axios';
 
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
+export async function getServerSideProps(ctx) {
+  const { locale } = ctx;
+  const cookies = nookies.get(ctx);
+  const token = cookies.token;
+
+  let datas = [];
+  try {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/search-dish`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    datas = res.data;
+  } catch (error) {
+    // optionally handle 401 → redirect
+    if (error.response?.status === 401) {
+      return {
+        redirect: { destination: "/auth/signin", permanent: false },
+      };
+    }
+  }
+
+  return {
+    props: {
+      datas,
+      ...(await serverSideTranslations(locale, ["common"])),
+    },
+  };
 }
 
-export default function Page() {
+export default function Page({ datas }: { datas: Dish[] }) {
 
-    const [data, setData] = useState<Dish[]>([]);
+    const [data, setData] = useState<Dish[]>(datas);
 
     return (
         <Box>

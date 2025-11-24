@@ -425,7 +425,10 @@ export default function ClientUIProvider(props: { children?: React.ReactNode }) 
     };
 
     // -------- Openers used by main page
-    const openDish = (dish: Dish) => setDishDrawer({ open: true, dish, qty: 1 });
+    const openDish = (dish: Dish) => {
+        setSelectedExtraSettings([]);
+        setDishDrawer({ open: true, dish, qty: 1 })
+    };
     const openCart = () => {
         setCartOpen(true)
         getIncartOrder();

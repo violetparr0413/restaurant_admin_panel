@@ -1,14 +1,10 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import Router from "next/router";
+import Cookies from "js-cookie";
+import { parse } from "cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 export const getCurrentDate = () => {
   const now = new Date();
@@ -142,17 +138,14 @@ export const convertDateTimeMin = (input: string) => {
 
 export const uploader = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "multipart/form-data",
-  },
+  headers: { "Content-Type": "multipart/form-data" },
 });
 
 uploader.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  // const lng = localStorage.getItem('locale');
+  // ✅ Read token from cookies instead of Cookie
+  const token = Cookies.get("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    // config.headers.Locale = lng;
   }
   return config;
 });
@@ -161,20 +154,23 @@ uploader.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+      Cookies.remove("token");
       Router.push("/auth/signin");
     }
-
     return Promise.reject(error);
   }
 );
 
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
+
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  // const lng = localStorage.getItem('locale');
+  // ✅ Read token from cookies instead of Cookie
+  const token = Cookies.get("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    // config.headers.Locale = lng;
   }
   return config;
 });
@@ -183,10 +179,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+      Cookies.remove("token");
       Router.push("/auth/signin");
     }
-
     return Promise.reject(error);
   }
 );

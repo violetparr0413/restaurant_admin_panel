@@ -1,47 +1,41 @@
-import { useEffect, useState } from 'react';
 import Table from './table';
 import { Category } from '@/utils/info';
-import api from '@/utils/http_helper';
-
-import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { Alert } from '@mui/material';
+import nookies from "nookies";
+import axios from 'axios';
 
-export async function getStaticProps({ locale }: { locale: string }) {
-    return {
-        props: {
-            ...(await serverSideTranslations(locale, ['common'])),
-        },
-    };
+export async function getServerSideProps(ctx) {
+  const { locale } = ctx;
+  const cookies = nookies.get(ctx);
+  const token = cookies.token;
+
+  let datas = [];
+  try {
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/category`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    datas = res.data;
+  } catch (error) {
+    // optionally handle 401 → redirect
+    if (error.response?.status === 401) {
+      return {
+        redirect: { destination: "/auth/signin", permanent: false },
+      };
+    }
+  }
+
+  return {
+    props: {
+      datas,
+      ...(await serverSideTranslations(locale, ["common"])),
+    },
+  };
 }
 
-export default function Page({ }) {
-
-    const { t } = useTranslation('common')
-
-    const [data, setData] = useState<Category[]>([]);
-    const [errorMessage, setErrorMessage] = useState('');
-
-    const refresh = () => {
-        api.get('/category') // your server endpoint
-            .then(res => setData(res.data))
-            .catch(error => {
-                if (error.response) {
-                    console.error(t('unexpected_error'), error);
-                    setErrorMessage(t('something_went_wrong'));
-                }
-            });
-    }
-
-    useEffect(() => {
-        refresh()
-    }, []);
-
-    if (!data) {
-        return <div>{t('loading')}...</div>;
-    }
-
-    const rows = data.sort((a, b) => (a.category_order < b.category_order ? -1 : 1));
+export default function Page({ datas }: { datas: Category[] }) {
+    const rows = datas.sort((a, b) => (a.category_order < b.category_order ? -1 : 1));
 
     const parentRows: (Category & { childs: Category[] })[] = rows
         .filter(row => row?.parent_id === 0)
@@ -61,9 +55,6 @@ export default function Page({ }) {
 
     return (
         <>
-            {errorMessage && (
-                <Alert severity="error">{errorMessage}</Alert>
-            )}
             <Table rows={parentRows} />
         </>
     )

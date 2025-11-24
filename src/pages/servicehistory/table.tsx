@@ -55,9 +55,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
     const theme = useTheme();
     const { count, page, rowsPerPage, onPageChange } = props;
 
-    const handleFirstPageButtonClick = (
-        event: React.MouseEvent<HTMLButtonElement>,
-    ) => {
+    const handleFirstPageButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         onPageChange(event, 0);
     };
 
@@ -75,18 +73,10 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
     return (
         <Box sx={{ flexShrink: 0, ml: 2.5 }}>
-            <IconButton
-                onClick={handleFirstPageButtonClick}
-                disabled={page === 0}
-                aria-label="first page"
-            >
+            <IconButton onClick={handleFirstPageButtonClick} disabled={page === 0} aria-label="first page">
                 {theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
             </IconButton>
-            <IconButton
-                onClick={handleBackButtonClick}
-                disabled={page === 0}
-                aria-label="previous page"
-            >
+            <IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="previous page">
                 {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
             </IconButton>
             <IconButton
@@ -112,35 +102,31 @@ interface TableProps {
 }
 
 export default function Page({ rows }: TableProps) {
-    const { t } = useTranslation('common')
-
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(25);
-    const [maxHeight, setMaxHeight] = React.useState(0)
-
+    const { t } = useTranslation('common');
     const router = useRouter();
     const { locale } = router;
+
+    // ✅ Load pagination state from storage
+    const getInitialTableState = () => {
+        return { page: 0, rowsPerPage: 25 };
+    };
+
+    const [pagination, setPagination] = React.useState(getInitialTableState);
+    const { page, rowsPerPage } = pagination;
+    const [maxHeight, setMaxHeight] = React.useState(0);
 
     React.useEffect(() => {
         setMaxHeight(document.documentElement.clientHeight - 120);
     }, []);
 
-    // Avoid a layout jump when reaching the last page with empty rows.
-    const emptyRows =
-        page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows?.length) : 0;
+    const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows?.length) : 0;
 
-    const handleChangePage = (
-        event: React.MouseEvent<HTMLButtonElement> | null,
-        newPage: number,
-    ) => {
-        setPage(newPage);
+    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPagination((prev) => ({ ...prev, page: newPage }));
     };
 
-    const handleChangeRowsPerPage = (
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setPagination({ page: 0, rowsPerPage: parseInt(event.target.value, 10) });
     };
 
     return (
@@ -163,26 +149,19 @@ export default function Page({ rows }: TableProps) {
                     )?.map((row) => (
                         <TableRow key={row?.service_history_id}>
                             <TableCell component="th" scope="row">
-                                {locale === 'en' ? row?.service?.service_en_name :
-                                    locale === 'zh' ? row?.service?.service_zh_name :
-                                        locale === 'ko' ? row?.service?.service_ko_name :
-                                            row?.service?.service_name}
+                                {locale === 'en'
+                                    ? row?.service?.service_en_name
+                                    : locale === 'zh'
+                                    ? row?.service?.service_zh_name
+                                    : locale === 'ko'
+                                    ? row?.service?.service_ko_name
+                                    : row?.service?.service_name}
                             </TableCell>
-                            <TableCell>
-                                {row?.amount}
-                            </TableCell>
-                            <TableCell>
-                                {row?.table?.name}
-                            </TableCell>
-                            <TableCell>
-                                {row?.manager?.name}
-                            </TableCell>
-                            <TableCell>
-                                {row?.status}
-                            </TableCell>
-                            <TableCell align="right">
-                                {convertDateTime(row?.created_at)}
-                            </TableCell>
+                            <TableCell>{row?.amount}</TableCell>
+                            <TableCell>{row?.table?.name}</TableCell>
+                            <TableCell>{row?.manager?.name}</TableCell>
+                            <TableCell>{row?.status}</TableCell>
+                            <TableCell align="right">{convertDateTime(row?.created_at)}</TableCell>
                         </TableRow>
                     ))}
                     {emptyRows > 0 && (
@@ -201,9 +180,7 @@ export default function Page({ rows }: TableProps) {
                             page={page}
                             slotProps={{
                                 select: {
-                                    inputProps: {
-                                        'aria-label': t('rows_per_page'),
-                                    },
+                                    inputProps: { 'aria-label': t('rows_per_page') },
                                     native: true,
                                 },
                             }}

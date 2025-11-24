@@ -256,29 +256,29 @@ function Row({ row, onDelete, provided, snapshot, locale }: RowProps) {
           />
         ) : (
           <>
-            <TableCell component="th" scope="row">
+            <TableCell component="th" scope="row" style={{border: 'none'}}>
               {locale === 'en' ? rowData?.category_en_name :
                 locale === 'zh' ? rowData?.category_zh_name :
                   locale === 'ko' ? rowData?.category_ko_name :
                     rowData?.category_name}
             </TableCell>
-            <TableCell>
+            <TableCell style={{border: 'none'}}>
               {rowData?.category_image ? (<DishImagePreview
                 src={process.env.NEXT_PUBLIC_API_BASE_URL2 + rowData?.category_image}
               />) : (<></>)}
             </TableCell>
-            <TableCell>
+            <TableCell style={{border: 'none'}}>
               {rowData?.tax_rate && (<>
                 {rowData?.tax_rate?.tax_rate_name} ({rowData?.tax_rate?.tax_rate_value}%)
               </>)}
             </TableCell>
-            <TableCell>
+            <TableCell style={{border: 'none'}}>
               {rowData?.printers.reduce((a, x) => a += (a == '' ? '' : ', ') + x.printer_name, '')}
             </TableCell>
-            <TableCell align="right">
+            <TableCell style={{border: 'none'}} align="right">
               {convertDateTime(rowData?.created_at)}
             </TableCell>
-            <TableCell>
+            <TableCell style={{border: 'none'}}>
               <IconButton
                 aria-label="edit"
                 color="primary"

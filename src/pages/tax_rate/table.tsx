@@ -105,13 +105,19 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
 interface TableProps {
     rows: TaxRate[];
+    onDataChange: () => void;
 }
 
-export default function Page({ rows }: TableProps) {
+export default function Page({ rows, onDataChange }: TableProps) {
     const { t } = useTranslation('common')
 
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    // ✅ Load pagination state from storage
+    const getInitialTableState = () => {
+        return { page: 0, rowsPerPage: 10 };
+    };
+
+    const [pagination, setPagination] = React.useState(getInitialTableState);
+    const { page, rowsPerPage } = pagination;
 
     const [rowsData, setRows] = React.useState(rows);
     const [view, setView] = React.useState('hide'); // can be 'hide', 'add', 'edit', delete
@@ -121,22 +127,21 @@ export default function Page({ rows }: TableProps) {
         setRows(rows);
     }, [rows]);
 
+    const updateRows = (newRows: TaxRate[]) => {
+        setRows(newRows);
+        onDataChange(); // ✅ notify parent to update cache
+    };
+
     // Avoid a layout jump when reaching the last page with empty rows.
     const emptyRows =
         page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rowsData?.length) : 0;
 
-    const handleChangePage = (
-        event: React.MouseEvent<HTMLButtonElement> | null,
-        newPage: number,
-    ) => {
-        setPage(newPage);
+    const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPagination((prev) => ({ ...prev, page: newPage }));
     };
 
-    const handleChangeRowsPerPage = (
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setPagination({ page: 0, rowsPerPage: parseInt(event.target.value, 10) });
     };
 
     const handleBackClick = () => {
@@ -145,9 +150,11 @@ export default function Page({ rows }: TableProps) {
     };
 
     const handleSaveClick = (data: TaxRate) => {
-        rowsData?.find(x => x.tax_rate_id === data.tax_rate_id) ?
-            setRows(rowsData => rowsData?.map(x => x.tax_rate_id === data.tax_rate_id ? data : x))
-            : setRows([...rowsData, data])
+        const updated = rowsData?.find(x => x.tax_rate_id === data.tax_rate_id)
+            ? rowsData.map(x => (x.tax_rate_id === data.tax_rate_id ? data : x))
+            : [...rowsData, data];
+
+        updateRows(updated);
         setView('hide');
     };
 
@@ -166,8 +173,8 @@ export default function Page({ rows }: TableProps) {
     };
 
     const handleDeleteReq = (data: TaxRate) => {
-        const index = rowsData?.indexOf(data)
-        if (index !== -1) rowsData?.splice(index, 1);
+        const updated = rowsData.filter(row => row.tax_rate_id !== data.tax_rate_id);
+        updateRows(updated);
         setRows(rowsData?.filter(row => row !== data))
     }
 

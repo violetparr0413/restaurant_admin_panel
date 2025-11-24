@@ -21,6 +21,7 @@ import Typography from '@mui/material/Typography';
 import { Logout } from '@mui/icons-material';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { Collapse } from '@mui/material';
+import Cookies from "js-cookie";
 
 const drawerWidth = 240;
 
@@ -216,7 +217,7 @@ export default function Layer(props: Props) {
                     <Box sx={{ color: 'white', ml: 'auto', display: 'flex', alignItems: 'center' }}>
                         <LanguageSwitcher />
                         <IconButton aria-label="add" size="medium" sx={{ color: 'white', ml: 'auto' }} onClick={() => {
-                            localStorage.removeItem('token');
+                            Cookies.remove("token");
                             router.push('/auth/signin');
                         }}><Logout fontSize="inherit" />
                         </IconButton>

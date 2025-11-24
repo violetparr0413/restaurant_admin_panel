@@ -102,8 +102,6 @@ const SearchBox: React.FC<ParamProps> = ({ refresh }) => {
   }, [])
 
   React.useEffect(() => {
-    // run immediately
-    handleSearch();
 
     // and poll every 5s with the *current* filters
     const id = setInterval(handleSearch, 5000);

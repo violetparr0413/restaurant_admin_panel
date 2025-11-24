@@ -82,7 +82,7 @@ const DishSearchBox: React.FC<ParamProps> = ({ refresh }) => {
     useEffect(() => {
         getCategoryData()
         // run immediately
-        handleSearch();
+        // handleSearch();
     }, []);
 
     const router = useRouter();
